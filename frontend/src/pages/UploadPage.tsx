@@ -15,7 +15,8 @@ import {
   Box,
   MonitorPlay,
   Check,
-  Zap
+  Zap,
+  ArrowRight
 } from 'lucide-react';
 
 export default function UploadAndConfigure() {
@@ -272,9 +273,13 @@ export default function UploadAndConfigure() {
               <button className="w-full sm:w-1/2 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border-2 border-slate-200 text-slate-700 font-semibold hover:border-slate-300 hover:bg-slate-50 transition-colors">
                 <RefreshCw className="w-5 h-5" /> Replace Image
               </button>
-              <button className="w-full sm:w-1/2 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-semibold shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]">
-                <Sparkles className="w-5 h-5" /> AI Analysis &rarr;
-              </button>
+              <Link 
+                to="/analysis"
+                className="w-full sm:w-1/2 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-semibold shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]"
+              >
+                <Sparkles className="w-5 h-5" /> AI Analysis
+                <ArrowRight className="w-5 h-5" />
+              </Link>
             </div>
 
           </div>

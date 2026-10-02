@@ -28,7 +28,12 @@ const Header = () => (
       </nav>
 
       <div className="flex items-center gap-4">
-        {/* Placeholder for future auth or CTA buttons if needed */}
+        <Link
+          to="/create"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all shadow-md shadow-blue-600/20"
+        >
+          Start Creating
+        </Link>
       </div>
     </div>
   </header>
@@ -47,10 +52,13 @@ const Hero = () => (
       </p>
       
       <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
-        <button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-full font-semibold transition-all shadow-lg shadow-blue-600/20 w-full sm:w-auto">
+        <Link
+          to="/create"
+          className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-full font-semibold transition-all shadow-lg shadow-blue-600/20 w-full sm:w-auto"
+        >
           Start Creating
           <ArrowRight className="w-4 h-4" />
-        </button>
+        </Link>
         <button className="flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-8 py-3.5 rounded-full font-semibold transition-all w-full sm:w-auto">
           <PlayCircle className="w-5 h-5 text-slate-400" />
           See How It Works
@@ -269,10 +277,13 @@ const CTA = () => (
           </div>
         </div>
         <div className="shrink-0 w-full md:w-auto">
-          <button className="w-full md:w-auto flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-600/20 text-lg">
-            Open Ephemeral Sandbox
+          <Link
+            to="/create"
+            className="w-full md:w-auto flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-600/20 text-lg"
+          >
+            Start Creating Now
             <Code className="w-5 h-5" />
-          </button>
+          </Link>
         </div>
       </div>
     </div>

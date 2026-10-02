@@ -327,22 +327,22 @@ export default function App() {
       {}
       {/* Bottom Action Bar */}
       <footer className="h-20 bg-white border-t border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
-        <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors border border-slate-200">
+        <Link to="/analysis" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors border border-slate-200">
           <ChevronLeft className="w-4 h-4" /> Back to Analysis
-        </button>
+        </Link>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors border border-purple-200">
+          <Link to="/refine" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors border border-purple-200">
             <Sparkles className="w-4 h-4" /> Refine with AI
-          </button>
+          </Link>
           
           <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm">
             <Download className="w-4 h-4" /> Download ZIP
           </button>
           
-          <button className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
+          <Link to="/compare" className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
             Compare Designs <SplitSquareHorizontal className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
       </footer>
 

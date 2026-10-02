@@ -356,13 +356,13 @@ export default function App() {
                </div>
                
                <div className="flex items-center gap-3">
-                 <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 bg-white shadow-sm">
+                 <Link to="/compare" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 bg-white shadow-sm">
                    <ArrowLeft className="w-4 h-4" /> Back to Compare
-                 </button>
+                 </Link>
                  
-                 <button className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
+                 <Link to="/export" className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
                    Proceed to Export <ArrowRight className="w-4 h-4" />
-                 </button>
+                 </Link>
                </div>
             </div>
 

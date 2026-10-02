@@ -420,9 +420,9 @@ export default function App() {
             <RefreshCcw className="w-4 h-4 text-slate-400" /> Re-run Diff
           </button>
           
-          <button className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
+          <Link to="/refine" className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
             Proceed to AI Refine <ArrowRight className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
       </footer>
 

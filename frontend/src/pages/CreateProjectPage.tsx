@@ -15,8 +15,6 @@ import {
 export default function CreateProject() {
   const [projectName, setProjectName] = useState('Restaurant Mobile App');
   const [selectedFramework, setSelectedFramework] = useState('react-native');
-  const [autoGenerateTokens, setAutoGenerateTokens] = useState(true);
-  const [strictTypeSafety, setStrictTypeSafety] = useState(true);
 
   const steps = [
     { id: 1, label: 'Upload', active: true },
@@ -172,48 +170,18 @@ export default function CreateProject() {
             </div>
           </div>
 
-          <div className="bg-[#F8FAFC] border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row gap-6 md:gap-12 mb-10">
-            {/* Setting 1 */}
-            <div className="flex-1 flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-semibold text-slate-800 mb-1">Auto-generate Theme Tokens</h4>
-                <p className="text-xs text-slate-500 font-mono">Extract hex palette into tailwind/colors config</p>
-              </div>
-              <button 
-                onClick={() => setAutoGenerateTokens(!autoGenerateTokens)}
-                className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${autoGenerateTokens ? 'bg-blue-600' : 'bg-slate-300'}`}
-              >
-                <span className={`inline-block w-4 h-4 bg-white rounded-full transition-transform duration-200 transform ${autoGenerateTokens ? 'translate-x-7' : 'translate-x-1'}`} />
-              </button>
-            </div>
-
-            {/* Divider for mobile, hidden on md */}
-            <div className="h-px bg-slate-200 md:hidden w-full"></div>
-
-            {/* Setting 2 */}
-            <div className="flex-1 flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-semibold text-slate-800 mb-1">Strict Type Safety</h4>
-                <p className="text-xs text-slate-500 font-mono">Produce exportable TypeScript interface bindings</p>
-              </div>
-              <button 
-                onClick={() => setStrictTypeSafety(!strictTypeSafety)}
-                className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${strictTypeSafety ? 'bg-blue-600' : 'bg-slate-300'}`}
-              >
-                <span className={`inline-block w-4 h-4 bg-white rounded-full transition-transform duration-200 transform ${strictTypeSafety ? 'translate-x-7' : 'translate-x-1'}`} />
-              </button>
-            </div>
-          </div>
-
           <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2 text-slate-600">
               <ShieldCheck className="w-5 h-5 text-green-500" />
               <span className="text-sm font-medium">Temporary workspace — projects persist in session memory.</span>
             </div>
-            <button className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-600/20 active:scale-[0.98]">
+            <Link
+              to="/upload"
+              className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-600/20 active:scale-[0.98]"
+            >
               Continue to Upload
               <ArrowRight className="w-5 h-5" />
-            </button>
+            </Link>
           </div>
 
         </div>

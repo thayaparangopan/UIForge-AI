@@ -245,11 +245,20 @@ export default function AIAnalysisPage() {
             
             {/* Engine Status Card */}
             <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100">
-                <div className="bg-blue-50 p-2 rounded-xl border border-blue-100">
-                  <BrainCircuit className="w-5 h-5 text-blue-600" />
+              <div className="flex items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className="bg-blue-50 p-2 rounded-xl border border-blue-100">
+                    <BrainCircuit className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-lg">AI UI Analysis Engine</h3>
                 </div>
-                <h3 className="font-bold text-slate-900 text-lg">AI UI Analysis Engine</h3>
+                <Link
+                  to="/generate"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-md shadow-blue-500/20 transition-all active:scale-95 text-sm"
+                >
+                  <Code className="w-4 h-4" />
+                  Generate Code <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -359,30 +368,21 @@ export default function AIAnalysisPage() {
                   </button>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
-      </main>
 
-      {}
-      <div className="w-full bg-[#F8FAFC] border-t border-slate-200 p-4 sm:p-6 pb-8 sticky bottom-0 z-40">
-        <div className="max-w-[1400px] mx-auto bg-white rounded-2xl border border-slate-200 p-6 shadow-lg shadow-slate-200/50 flex flex-col sm:flex-row items-center justify-between gap-6">
-          
-          <div className="max-w-xl">
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to transform visual AST to clean code?</h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Generates fully typed React Native components, accessible elements, and exact Tailwind CSS classes.
-            </p>
-          </div>
-
-          <button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all active:scale-95 whitespace-nowrap">
+        {/* Bottom Action inside page flow */}
+        <div className="flex justify-end pt-4 border-t border-slate-200/80">
+          <Link
+            to="/generate"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all active:scale-95 text-sm"
+          >
             <Code className="w-5 h-5" />
             Generate Code <ArrowRight className="w-5 h-5" />
-          </button>
-
+          </Link>
         </div>
-      </div>
+      </main>
 
     </div>
   );
