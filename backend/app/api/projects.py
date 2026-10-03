@@ -19,9 +19,14 @@ def create_project(
     project_data: ProjectCreate,
     db: Session = Depends(get_db)
 ):
+    name = project_data.project_name or project_data.title or "Untitled Project"
+    fw = project_data.framework or "react-native"
+
     project = Project(
-        project_name=project_data.project_name,
-        framework=project_data.framework,
+        project_name=name,
+        framework=fw,
+        title=project_data.title or name,
+        description=project_data.description,
         status="created"
     )
 

@@ -12,13 +12,14 @@ import {
   Layers,
   Loader2
 } from 'lucide-react';
-import { projectService } from '../services/projectService';
+import { createProject } from '../services/projectApi';
 
 export default function CreateProject() {
   const navigate = useNavigate();
   const [projectName, setProjectName] = useState('Restaurant Mobile App');
   const [selectedFramework, setSelectedFramework] = useState('react-native');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
   const steps = [
     { id: 1, label: 'Upload', active: true },
@@ -57,18 +58,32 @@ export default function CreateProject() {
     }
   ];
 
-  const handleCreateProject = async () => {
+  const handleCreateProject = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!projectName.trim()) return;
+
     setIsSubmitting(true);
+    setStatusMessage('Creating project record in PostgreSQL database...');
+
     try {
-      const project = await projectService.createProject({
+      const newProject = await createProject({
+        title: projectName,
         project_name: projectName,
         framework: selectedFramework,
       });
-      localStorage.setItem('activeProjectId', project.id);
-      navigate(`/upload?projectId=${project.id}`);
+
+      console.log('Success! PostgreSQL record created:', newProject);
+      setStatusMessage('Project created successfully!');
+      localStorage.setItem('activeProjectId', newProject.id);
+      
+      // Brief pause to display success before navigation
+      setTimeout(() => {
+        navigate(`/upload?projectId=${newProject.id}`);
+      }, 500);
+
     } catch (error) {
-      console.error('Error creating project:', error);
+      console.error('Failed to create project:', error);
+      setStatusMessage('Failed to connect to backend.');
     } finally {
       setIsSubmitting(false);
     }
@@ -122,98 +137,113 @@ export default function CreateProject() {
           <div className="mb-10">
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3 tracking-tight">Create Your Project</h1>
             <p className="text-slate-500 text-lg">
-              Configure your temporary workspace session in one step. No login or signup required.
+              Configure your project workspace. Creates a record in your PostgreSQL database.
             </p>
           </div>
 
-          <div className="mb-10">
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-widest mb-3">
-              <span className="text-blue-600">01.</span> Project Identifier
-            </label>
-            <div className="relative flex items-center">
-              <div className="absolute left-4 text-blue-600 font-bold text-lg select-none">
-                ›
+          {statusMessage && (
+            <div className={`mb-6 p-4 rounded-xl text-sm font-medium transition-all ${
+              statusMessage.includes('successfully') 
+                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' 
+                : statusMessage.includes('Failed')
+                ? 'bg-rose-50 border border-rose-200 text-rose-700'
+                : 'bg-blue-50 border border-blue-200 text-blue-700'
+            }`}>
+              {statusMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleCreateProject}>
+            <div className="mb-10">
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-widest mb-3">
+                <span className="text-blue-600">01.</span> Project Identifier
+              </label>
+              <div className="relative flex items-center">
+                <div className="absolute left-4 text-blue-600 font-bold text-lg select-none">
+                  ›
+                </div>
+                <input 
+                  type="text" 
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  className="w-full h-14 pl-10 pr-4 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-slate-700 font-mono text-sm shadow-sm"
+                  placeholder="Enter project name..."
+                  required
+                />
               </div>
-              <input 
-                type="text" 
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                className="w-full h-14 pl-10 pr-4 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-slate-700 font-mono text-sm shadow-sm"
-                placeholder="Enter project name..."
-              />
             </div>
-          </div>
 
-          <div className="mb-10">
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-widest mb-3">
-              <span className="text-blue-600">02.</span> Choose Target Framework
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {frameworks.map((fw) => {
-                const isSelected = selectedFramework === fw.id;
-                return (
-                  <div 
-                    key={fw.id}
-                    onClick={() => setSelectedFramework(fw.id)}
-                    className={`relative rounded-2xl border-2 p-6 cursor-pointer transition-all duration-200 flex flex-col h-full ${
-                      isSelected 
-                        ? 'border-blue-600 bg-[#F4F8FF] shadow-sm' 
-                        : 'border-slate-100 hover:border-slate-300 bg-white hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-5">
-                      <div className={`p-2.5 rounded-xl ${isSelected ? 'bg-blue-100' : 'bg-slate-100'}`}>
-                        {fw.icon}
+            <div className="mb-10">
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-widest mb-3">
+                <span className="text-blue-600">02.</span> Choose Target Framework
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {frameworks.map((fw) => {
+                  const isSelected = selectedFramework === fw.id;
+                  return (
+                    <div 
+                      key={fw.id}
+                      onClick={() => setSelectedFramework(fw.id)}
+                      className={`relative rounded-2xl border-2 p-6 cursor-pointer transition-all duration-200 flex flex-col h-full ${
+                        isSelected 
+                          ? 'border-blue-600 bg-[#F4F8FF] shadow-sm' 
+                          : 'border-slate-100 hover:border-slate-300 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-5">
+                        <div className={`p-2.5 rounded-xl ${isSelected ? 'bg-blue-100' : 'bg-slate-100'}`}>
+                          {fw.icon}
+                        </div>
+                        {isSelected ? (
+                          <CheckCircle2 className="w-6 h-6 text-blue-600 fill-white" />
+                        ) : (
+                          <Circle className="w-6 h-6 text-slate-300" />
+                        )}
                       </div>
-                      {isSelected ? (
-                        <CheckCircle2 className="w-6 h-6 text-blue-600 fill-white" />
-                      ) : (
-                        <Circle className="w-6 h-6 text-slate-300" />
-                      )}
-                    </div>
-                    
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">{fw.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed mb-6 flex-1">
-                      {fw.description}
-                    </p>
+                      
+                      <h3 className="text-lg font-bold text-slate-900 mb-2">{fw.title}</h3>
+                      <p className="text-slate-500 text-sm leading-relaxed mb-6 flex-1">
+                        {fw.description}
+                      </p>
 
-                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-200/60">
-                      <span className={`text-[10px] tracking-wider uppercase px-2 py-1 rounded ${fw.badge1.style}`}>
-                        {fw.badge1.text}
-                      </span>
-                      <span className={`text-[10px] tracking-wider uppercase ${fw.badge2.style}`}>
-                        {fw.badge2.text}
-                      </span>
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-200/60">
+                        <span className={`text-[10px] tracking-wider uppercase px-2 py-1 rounded ${fw.badge1.style}`}>
+                          {fw.badge1.text}
+                        </span>
+                        <span className={`text-[10px] tracking-wider uppercase ${fw.badge2.style}`}>
+                          {fw.badge2.text}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2 text-slate-600">
-              <ShieldCheck className="w-5 h-5 text-green-500" />
-              <span className="text-sm font-medium">Temporary workspace — projects persist in session memory & PostgreSQL.</span>
+            <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-2 text-slate-600">
+                <ShieldCheck className="w-5 h-5 text-green-500" />
+                <span className="text-sm font-medium">Temporary workspace — projects persist in PostgreSQL database.</span>
+              </div>
+              <button
+                type="submit"
+                disabled={isSubmitting || !projectName.trim()}
+                className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3.5 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-600/20 active:scale-[0.98] cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Creating Project...
+                  </>
+                ) : (
+                  <>
+                    Continue to Upload
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
             </div>
-            <button
-              onClick={handleCreateProject}
-              disabled={isSubmitting || !projectName.trim()}
-              className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3.5 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-600/20 active:scale-[0.98] cursor-pointer"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating Project...
-                </>
-              ) : (
-                <>
-                  Continue to Upload
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          </div>
+          </form>
 
         </div>
       </main>
