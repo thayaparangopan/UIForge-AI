@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   Download,
   Copy,
-  ExternalLink,
   Layers,
   Code2,
   ShieldCheck,
@@ -95,7 +94,7 @@ export default function App() {
             Your generated React Native code bundle is fully compiled, linted, and ready for your production repository.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
             <button className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-bold shadow-md shadow-blue-500/20 transition-all">
               <Download className="w-5 h-5" />
               Download ZIP Bundle
@@ -106,11 +105,6 @@ export default function App() {
               Copy All Code
             </button>
           </div>
-
-          <button className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors bg-slate-50 border border-slate-200 px-4 py-2 rounded-lg">
-            <ExternalLink className="w-4 h-4" />
-            Open in CodeSandbox / Snack
-          </button>
         </div>
 
         {/* Main Content Grid */}
