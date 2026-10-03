@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
   RotateCcw,
@@ -9,12 +9,16 @@ import {
   ArrowRight,
   Atom,
   AppWindow,
-  Layers
+  Layers,
+  Loader2
 } from 'lucide-react';
+import { projectService } from '../services/projectService';
 
 export default function CreateProject() {
+  const navigate = useNavigate();
   const [projectName, setProjectName] = useState('Restaurant Mobile App');
   const [selectedFramework, setSelectedFramework] = useState('react-native');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const steps = [
     { id: 1, label: 'Upload', active: true },
@@ -52,6 +56,23 @@ export default function CreateProject() {
       badge2: { text: 'Dart 3.x', style: 'text-slate-400 font-medium' },
     }
   ];
+
+  const handleCreateProject = async () => {
+    if (!projectName.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const project = await projectService.createProject({
+        project_name: projectName,
+        framework: selectedFramework,
+      });
+      localStorage.setItem('activeProjectId', project.id);
+      navigate(`/upload?projectId=${project.id}`);
+    } catch (error) {
+      console.error('Error creating project:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans flex flex-col selection:bg-blue-200">
@@ -173,15 +194,25 @@ export default function CreateProject() {
           <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2 text-slate-600">
               <ShieldCheck className="w-5 h-5 text-green-500" />
-              <span className="text-sm font-medium">Temporary workspace — projects persist in session memory.</span>
+              <span className="text-sm font-medium">Temporary workspace — projects persist in session memory & PostgreSQL.</span>
             </div>
-            <Link
-              to="/upload"
-              className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-600/20 active:scale-[0.98]"
+            <button
+              onClick={handleCreateProject}
+              disabled={isSubmitting || !projectName.trim()}
+              className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3.5 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-600/20 active:scale-[0.98] cursor-pointer"
             >
-              Continue to Upload
-              <ArrowRight className="w-5 h-5" />
-            </Link>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Creating Project...
+                </>
+              ) : (
+                <>
+                  Continue to Upload
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
           </div>
 
         </div>

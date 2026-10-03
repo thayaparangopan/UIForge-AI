@@ -2,30 +2,29 @@ export type TargetFramework = 'react-native' | 'react-js' | 'flutter';
 
 export interface Project {
   id: string;
-  name: string;
-  framework: TargetFramework;
-  createdAt: string;
-  updatedAt: string;
-  status: 'draft' | 'uploaded' | 'analyzed' | 'generated' | 'completed';
-  screenshotUrl?: string;
-  codeBundleUrl?: string;
+  project_name: string;
+  framework: TargetFramework | string;
+  status: string;
+  created_at?: string;
+  updated_at?: string;
+  description?: string;
+  config?: any;
 }
 
 export interface CreateProjectPayload {
-  name: string;
-  framework: TargetFramework;
-  description?: string;
+  project_name: string;
+  framework: string;
 }
 
-const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || '/api/v1';
+const API_BASE_URL = '/api';
 
 export const projectService = {
   /**
-   * Create a new UIForge project
+   * Create a new UIForge project in PostgreSQL database via FastAPI
    */
   async createProject(payload: CreateProjectPayload): Promise<Project> {
     try {
-      const response = await fetch(`${API_BASE_URL}/projects`, {
+      const response = await fetch(`${API_BASE_URL}/projects/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -37,14 +36,13 @@ export const projectService = {
 
       return await response.json();
     } catch (error) {
-      console.warn('Backend unavailable, returning fallback created project:', error);
+      console.warn('Backend error or unavailable, returning fallback created project:', error);
       return {
         id: `proj_${Date.now()}`,
-        name: payload.name,
+        project_name: payload.project_name,
         framework: payload.framework,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: 'draft',
+        status: 'created',
+        created_at: new Date().toISOString(),
       };
     }
   },
@@ -63,11 +61,10 @@ export const projectService = {
       console.warn('Backend unavailable, returning fallback project by ID:', error);
       return {
         id,
-        name: 'Restaurant Mobile UI',
+        project_name: 'Restaurant Mobile UI',
         framework: 'react-native',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: 'completed',
+        created_at: new Date().toISOString(),
+        status: 'created',
       };
     }
   },
@@ -77,7 +74,7 @@ export const projectService = {
    */
   async listProjects(): Promise<Project[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/projects`);
+      const response = await fetch(`${API_BASE_URL}/projects/`);
       if (!response.ok) {
         throw new Error(`Failed to fetch projects: ${response.statusText}`);
       }
@@ -87,60 +84,12 @@ export const projectService = {
       return [
         {
           id: 'proj_default_1',
-          name: 'Restaurant Mobile UI',
+          project_name: 'Restaurant Mobile UI',
           framework: 'react-native',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          status: 'completed',
+          created_at: new Date().toISOString(),
+          status: 'created',
         }
       ];
-    }
-  },
-
-  /**
-   * Update project metadata
-   */
-  async updateProject(id: string, updates: Partial<Project>): Promise<Project> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update project: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.warn('Backend unavailable, returning mock updated project:', error);
-      return {
-        id,
-        name: updates.name || 'Restaurant Mobile UI',
-        framework: updates.framework || 'react-native',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: updates.status || 'completed',
-      };
-    }
-  },
-
-  /**
-   * Delete a project
-   */
-  async deleteProject(id: string): Promise<{ success: boolean }> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to delete project: ${response.statusText}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.warn('Backend unavailable, mocking delete success:', error);
-      return { success: true };
     }
   }
 };
