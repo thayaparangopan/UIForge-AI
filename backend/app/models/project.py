@@ -25,3 +25,4 @@ class Project(Base):
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     screenshots = relationship("Screenshot", back_populates="project", cascade="all, delete-orphan")
+    analyses = relationship("UIAnalysis", back_populates="project", cascade="all, delete-orphan")
