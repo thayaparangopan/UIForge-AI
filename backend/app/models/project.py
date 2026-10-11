@@ -2,6 +2,8 @@ import uuid
 from datetime import datetime, timezone
 # pyrefly: ignore [missing-import]
 from sqlalchemy import Column, String, Text, DateTime, JSON
+# pyrefly: ignore [missing-import]
+from sqlalchemy.orm import relationship
 from app.database.connection import Base
 
 
@@ -21,3 +23,5 @@ class Project(Base):
     config = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    screenshots = relationship("Screenshot", back_populates="project", cascade="all, delete-orphan")
