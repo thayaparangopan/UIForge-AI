@@ -4,16 +4,18 @@ import uuid
 from pathlib import Path
 from PIL import Image
 
-# pyrefly: ignore [missing-import]
+from typing import Optional
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-# pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
 from app.models.project import Project
 from app.models.screenshot import Screenshot
+from app.models.ui_analysis import UIAnalysis
 from app.schemas.project import ProjectCreate, ProjectResponse
 from app.schemas.screenshot import ScreenshotResponse
+from app.schemas.ui_analysis import AnalysisRequest, AnalysisResponse
+from app.services.analysis_service import analyze_ui_screenshot
 
 
 router = APIRouter(
@@ -137,6 +139,88 @@ async def upload_screenshot(
         url=relative_url,
         created_at=screenshot.created_at
     )
+
+
+@router.post("/{id}/analyze", response_model=AnalysisResponse)
+def analyze_project(
+    id: str,
+    request_data: Optional[AnalysisRequest] = None,
+    db: Session = Depends(get_db)
+):
+    project = db.query(Project).filter(Project.id == id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # Find screenshot: either explicitly requested or latest uploaded
+    screenshot = None
+    if request_data and request_data.screenshot_id:
+        screenshot = db.query(Screenshot).filter(
+            Screenshot.id == request_data.screenshot_id,
+            Screenshot.project_id == id
+        ).first()
+
+    if not screenshot:
+        screenshot = (
+            db.query(Screenshot)
+            .filter(Screenshot.project_id == id)
+            .order_by(Screenshot.created_at.desc())
+            .first()
+        )
+
+    if not screenshot:
+        raise HTTPException(
+            status_code=400,
+            detail="No screenshot available to analyze for this project. Please upload an image first."
+        )
+
+    # Perform AI analysis
+    analysis_data = analyze_ui_screenshot(
+        image_path=screenshot.file_path,
+        width=screenshot.width,
+        height=screenshot.height,
+        original_filename=screenshot.file_name
+    )
+
+    # Save to database
+    ui_analysis = UIAnalysis(
+        project_id=project.id,
+        screenshot_id=screenshot.id,
+        screen_name=analysis_data["screen_name"],
+        layout_type=analysis_data["layout_type"],
+        intermediate_representation=analysis_data["intermediate_representation"],
+        component_count=analysis_data["component_count"],
+        confidence_score=analysis_data["confidence_score"],
+        processing_time_ms=analysis_data["processing_time_ms"]
+    )
+
+    project.status = "analyzed"
+    db.add(ui_analysis)
+    db.commit()
+    db.refresh(ui_analysis)
+
+    return ui_analysis
+
+
+@router.get("/{id}/analysis", response_model=AnalysisResponse)
+def get_latest_analysis(
+    id: str,
+    db: Session = Depends(get_db)
+):
+    project = db.query(Project).filter(Project.id == id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    analysis = (
+        db.query(UIAnalysis)
+        .filter(UIAnalysis.project_id == id)
+        .order_by(UIAnalysis.created_at.desc())
+        .first()
+    )
+
+    if not analysis:
+        raise HTTPException(status_code=404, detail="No analysis found for this project")
+
+    return analysis
 
 
 @router.get("/{id}/screenshot", response_model=ScreenshotResponse)

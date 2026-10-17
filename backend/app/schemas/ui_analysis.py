@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, computed_field
 
 
 class BoundingBox(BaseModel):
@@ -71,3 +71,33 @@ class AnalysisResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    @property
+    def analysisId(self) -> str:
+        return self.id
+
+    @computed_field
+    @property
+    def uploadId(self) -> Optional[str]:
+        return self.screenshot_id
+
+    @computed_field
+    @property
+    def detectedComponentCount(self) -> int:
+        return self.component_count
+
+    @computed_field
+    @property
+    def confidenceScore(self) -> float:
+        return self.confidence_score
+
+    @computed_field
+    @property
+    def processingTimeMs(self) -> int:
+        return self.processing_time_ms
+
+    @computed_field
+    @property
+    def analyzedAt(self) -> str:
+        return self.created_at.isoformat()
