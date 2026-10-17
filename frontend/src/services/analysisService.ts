@@ -46,32 +46,42 @@ export interface AnalysisResult {
   analyzedAt: string;
 }
 
-const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || '/api/v1';
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || '/api';
 
 export const analysisService = {
   /**
-   * Perform AI visual UI analysis on an uploaded screenshot
+   * Perform AI visual UI analysis on an uploaded screenshot for a specific project
    */
-  async analyzeScreenshot(uploadId: string): Promise<AnalysisResult> {
+  async analyzeScreenshot(projectId: string, screenshotId?: string): Promise<AnalysisResult> {
     try {
-      const response = await fetch(`${API_BASE_URL}/analyze`, {
+      const response = await fetch(`${API_BASE_URL}/projects/${projectId}/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uploadId }),
+        body: JSON.stringify({ screenshot_id: screenshotId }),
       });
 
       if (!response.ok) {
-        throw new Error(`Analysis failed with status ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.detail || `Analysis failed with status ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      return {
+        analysisId: data.analysisId || data.id,
+        uploadId: data.uploadId || data.screenshot_id || screenshotId || '',
+        intermediateRepresentation: data.intermediate_representation,
+        confidenceScore: data.confidenceScore ?? data.confidence_score ?? 95.0,
+        detectedComponentCount: data.detectedComponentCount ?? data.component_count ?? (data.intermediate_representation?.components?.length || 0),
+        processingTimeMs: data.processingTimeMs ?? data.processing_time_ms ?? 0,
+        analyzedAt: data.analyzedAt || data.created_at || new Date().toISOString(),
+      };
     } catch (error) {
       console.warn('Backend unavailable, returning mock analysis result:', error);
       return {
         analysisId: `analysis_${Date.now()}`,
-        uploadId,
+        uploadId: screenshotId || 'mock_upload',
         confidenceScore: 98.4,
-        detectedComponentCount: 14,
+        detectedComponentCount: 7,
         processingTimeMs: 1420,
         analyzedAt: new Date().toISOString(),
         intermediateRepresentation: {
@@ -94,38 +104,62 @@ export const analysisService = {
               id: 'comp_1',
               type: 'navbar',
               label: 'Header Bar',
-              bounding_box: { x: 0, y: 0, width: 375, height: 60 },
+              bounding_box: { x: 5, y: 4, width: 90, height: 6 },
             },
             {
               id: 'comp_2',
-              type: 'card',
-              label: 'Login Container Card',
-              bounding_box: { x: 20, y: 120, width: 335, height: 400 },
-              children: [
-                {
-                  id: 'comp_2_1',
-                  type: 'text',
-                  label: 'Order Delicious Food',
-                  bounding_box: { x: 40, y: 150, width: 295, height: 32 },
-                },
-                {
-                  id: 'comp_2_2',
-                  type: 'input',
-                  placeholder: 'your.email@bistro.io',
-                  bounding_box: { x: 40, y: 200, width: 295, height: 48 },
-                },
-                {
-                  id: 'comp_2_3',
-                  type: 'button',
-                  label: 'Sign In',
-                  bounding_box: { x: 40, y: 260, width: 295, height: 48 },
-                },
-              ],
+              type: 'image',
+              label: 'Brand Logo',
+              bounding_box: { x: 38, y: 14, width: 24, height: 10 },
+            },
+            {
+              id: 'comp_3',
+              type: 'text',
+              label: 'Welcome Back',
+              bounding_box: { x: 15, y: 27, width: 70, height: 5 },
+            },
+            {
+              id: 'comp_4',
+              type: 'input',
+              placeholder: 'Email Address',
+              bounding_box: { x: 8, y: 38, width: 84, height: 7 },
+            },
+            {
+              id: 'comp_5',
+              type: 'input',
+              placeholder: 'Password',
+              bounding_box: { x: 8, y: 48, width: 84, height: 7 },
+            },
+            {
+              id: 'comp_6',
+              type: 'button',
+              label: 'Sign In',
+              bounding_box: { x: 8, y: 60, width: 84, height: 7.5 },
             },
           ],
         },
       };
     }
+  },
+
+  /**
+   * Fetch the latest analysis result for a project
+   */
+  async getLatestAnalysis(projectId: string): Promise<AnalysisResult> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/analysis`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch analysis: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return {
+      analysisId: data.analysisId || data.id,
+      uploadId: data.uploadId || data.screenshot_id || '',
+      intermediateRepresentation: data.intermediate_representation,
+      confidenceScore: data.confidenceScore ?? data.confidence_score ?? 95.0,
+      detectedComponentCount: data.detectedComponentCount ?? data.component_count ?? 0,
+      processingTimeMs: data.processingTimeMs ?? data.processing_time_ms ?? 0,
+      analyzedAt: data.analyzedAt || data.created_at || new Date().toISOString(),
+    };
   },
 
   /**
@@ -140,7 +174,7 @@ export const analysisService = {
       return await response.json();
     } catch (error) {
       console.warn('Backend unavailable, returning fallback analysis:', error);
-      return this.analyzeScreenshot('mock_upload');
+      return this.analyzeScreenshot('mock_project');
     }
   }
 };

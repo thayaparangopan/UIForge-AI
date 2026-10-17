@@ -25,3 +25,4 @@ class Screenshot(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     project = relationship("Project", back_populates="screenshots")
+    analyses = relationship("UIAnalysis", back_populates="screenshot", cascade="all, delete-orphan")

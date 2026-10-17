@@ -7,8 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.database.connection import Base, engine
-from app.models.project import Project
-from app.models.screenshot import Screenshot
+from app.models import Project, Screenshot, UIAnalysis
 from app.api.projects import router as project_router
 
 
