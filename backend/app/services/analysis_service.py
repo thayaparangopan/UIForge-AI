@@ -180,7 +180,14 @@ def analyze_ui_screenshot(
         client = genai.Client(api_key=api_key)
         model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
-        with Image.open(image_path) as img:
+        with Image.open(image_path) as original_img:
+            # Create an optimized copy to avoid oversized payloads and SSL EOF issues on Windows
+            img = original_img.copy()
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+            # Scale down large screenshots (e.g. 4K/2K) to max 1280px while maintaining aspect ratio
+            img.thumbnail((1280, 1280), Image.Resampling.LANCZOS)
+
             response = client.models.generate_content(
                 model=model_name,
                 contents=[img, ANALYSIS_PROMPT],

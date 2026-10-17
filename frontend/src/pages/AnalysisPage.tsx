@@ -90,6 +90,20 @@ export default function AIAnalysisPage() {
     { id: 7, label: 'Export', state: 'pending' },
   ];
 
+  const handleReanalyze = async () => {
+    if (!projectId) return;
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const result = await analysisService.analyzeScreenshot(projectId, screenshotId || undefined);
+      setAnalysisResult(result);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to re-analyze UI screenshot with Gemini AI.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Perform Analysis and Load Screenshot on Mount
   useEffect(() => {
     let isMounted = true;
@@ -115,9 +129,20 @@ export default function AIAnalysisPage() {
           console.warn('Could not load latest screenshot metadata:', err);
         }
 
-        // 2. Perform or fetch AI analysis
-        const result = await analysisService.analyzeScreenshot(projectId, screenshotId || undefined);
-        if (isMounted) {
+        // 2. First check if analysis already exists for this project
+        let result: AnalysisResult | null = null;
+        try {
+          result = await analysisService.getLatestAnalysis(projectId);
+        } catch {
+          result = null;
+        }
+
+        // 3. If no existing analysis, trigger Gemini AI analysis
+        if (!result) {
+          result = await analysisService.analyzeScreenshot(projectId, screenshotId || undefined);
+        }
+
+        if (isMounted && result) {
           setAnalysisResult(result);
         }
       } catch (err: any) {
@@ -271,11 +296,21 @@ export default function AIAnalysisPage() {
                   <Focus className="w-5 h-5 text-blue-500" />
                   <h2 className="text-base font-bold text-slate-900">Visual Localization & Bounding Boxes</h2>
                 </div>
-                {isLoading && (
-                  <span className="text-[11px] font-mono bg-blue-50 text-blue-600 border border-blue-200 px-2.5 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Gemini Analyzing...
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {isLoading ? (
+                    <span className="text-[11px] font-mono bg-blue-50 text-blue-600 border border-blue-200 px-2.5 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Gemini Analyzing...
+                    </span>
+                  ) : (
+                    <button
+                      onClick={handleReanalyze}
+                      className="text-[11px] font-bold text-slate-600 hover:text-blue-600 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors cursor-pointer"
+                      title="Run Gemini Vision analysis again"
+                    >
+                      <Sparkles className="w-3 h-3 text-blue-500" /> Re-Analyze
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Preview Device Frame */}
