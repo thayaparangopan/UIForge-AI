@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from app.database.connection import Base, engine
 from app.models import Project, Screenshot, UIAnalysis
 from app.api.projects import router as project_router
+from app.api.generation import router as generation_router
 
 
 # Automatically create all database tables
@@ -37,6 +38,7 @@ app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 # Include API routes
 app.include_router(project_router)
+app.include_router(generation_router)
 
 
 @app.get("/")

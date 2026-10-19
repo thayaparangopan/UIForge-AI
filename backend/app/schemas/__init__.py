@@ -6,6 +6,13 @@ from app.schemas.ui_analysis import (
     UIIntermediateRepresentation,
     UIComponentIR,
 )
+from app.schemas.code_generation import (
+    CodeFileSchema,
+    GenerationMetricsSchema,
+    GenerationManifestSchema,
+    CodeGenerationRequest,
+    CodeGenerationResponse,
+)
 
 __all__ = [
     "ProjectCreate",
@@ -15,4 +22,10 @@ __all__ = [
     "AnalysisResponse",
     "UIIntermediateRepresentation",
     "UIComponentIR",
+    "CodeFileSchema",
+    "GenerationMetricsSchema",
+    "GenerationManifestSchema",
+    "CodeGenerationRequest",
+    "CodeGenerationResponse",
 ]
+
