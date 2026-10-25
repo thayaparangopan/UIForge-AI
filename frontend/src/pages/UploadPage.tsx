@@ -22,9 +22,11 @@ import {
 } from 'lucide-react';
 import { uploadService, type UploadResult } from '../services/uploadService';
 import { createProject } from '../services/projectApi';
+import { useWorkflow } from '../hooks/useWorkflow';
 
 export default function UploadAndConfigure() {
   const navigate = useNavigate();
+  const { state: workflowState, setScreenshot, setProject } = useWorkflow();
   const [searchParams, setSearchParams] = useSearchParams();
   const [, startTransition] = useTransition();
 
@@ -132,6 +134,10 @@ export default function UploadAndConfigure() {
       const result = await uploadService.uploadScreenshot(file, activeId);
       setUploadedScreenshot(result);
       setPreviewUrl(result.url);
+      setScreenshot(result.id, result.url, file);
+      if (workflowState.projectId !== activeId) {
+        setProject(activeId, file.name.replace(/\.[^/.]+$/, ''), workflowState.framework || 'react-native');
+      }
     } catch (err: unknown) {
       console.error('Upload failed:', err);
       const message = err instanceof Error ? err.message : 'Upload failed. Please try again.';

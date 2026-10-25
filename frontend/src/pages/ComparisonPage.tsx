@@ -31,6 +31,9 @@ import {
   ArrowRight
 } from 'lucide-react';
 
+import { comparisonService, type ComparisonResult } from '../services/comparisonService';
+import { useWorkflow } from '../hooks/useWorkflow';
+
 interface ProgressBarProps {
   label: string;
   percentage: number;
@@ -55,6 +58,31 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label, percentage, icon: Icon
 );
 
 export default function App() {
+  const { state: workflowState, setComparison } = useWorkflow();
+  const [comparison, setLocalComparison] = React.useState<ComparisonResult | null>(workflowState.comparisonResult);
+  const [, setIsComparing] = React.useState(!workflowState.comparisonResult);
+
+  const fetchComparison = async () => {
+    setIsComparing(true);
+    try {
+      const uploadId = workflowState.screenshotId || workflowState.projectId || 'upload_default';
+      const genId = workflowState.generationId || 'gen_default';
+      const res = await comparisonService.compareVisuals(uploadId, genId);
+      setLocalComparison(res);
+      setComparison(res);
+    } catch (e) {
+      console.warn('Comparison call error, using existing fallback', e);
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (!comparison) {
+      fetchComparison();
+    }
+  }, []);
+
   const steps = [
     { id: 1, label: 'Upload', state: 'completed' },
     { id: 2, label: 'Analyze', state: 'completed' },

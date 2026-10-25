@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { analysisService, type AnalysisResult, type UIComponentIR } from '../services/analysisService';
 import { uploadService } from '../services/uploadService';
+import { useWorkflow } from '../hooks/useWorkflow';
 
 interface BoundingBoxProps {
   top: string;
@@ -72,12 +73,13 @@ const BoundingBox: React.FC<BoundingBoxProps> = ({
 export default function AIAnalysisPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const projectId = searchParams.get('projectId') || '';
-  const screenshotId = searchParams.get('screenshotId') || '';
+  const { state: workflowState, setAnalysis } = useWorkflow();
+  const projectId = searchParams.get('projectId') || workflowState.projectId || '';
+  const screenshotId = searchParams.get('screenshotId') || workflowState.screenshotId || '';
 
-  const [screenshotUrl, setScreenshotUrl] = useState<string>('');
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [screenshotUrl, setScreenshotUrl] = useState<string>(workflowState.screenshotUrl || '');
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(workflowState.analysisResult);
+  const [isLoading, setIsLoading] = useState<boolean>(!workflowState.analysisResult);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const steps = [
@@ -97,6 +99,7 @@ export default function AIAnalysisPage() {
     try {
       const result = await analysisService.analyzeScreenshot(projectId, screenshotId || undefined);
       setAnalysisResult(result);
+      setAnalysis(result);
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to re-analyze UI screenshot with Gemini AI.');
     } finally {
@@ -111,7 +114,7 @@ export default function AIAnalysisPage() {
     async function loadDataAndAnalyze() {
       if (!projectId) {
         setIsLoading(false);
-        setErrorMessage('No project ID found in query parameters. Please upload a screenshot first.');
+        setErrorMessage('No project ID found. Please upload a screenshot first.');
         return;
       }
 
@@ -144,6 +147,7 @@ export default function AIAnalysisPage() {
 
         if (isMounted && result) {
           setAnalysisResult(result);
+          setAnalysis(result);
         }
       } catch (err: any) {
         if (isMounted) {
@@ -156,7 +160,11 @@ export default function AIAnalysisPage() {
       }
     }
 
-    loadDataAndAnalyze();
+    if (!analysisResult) {
+      loadDataAndAnalyze();
+    } else {
+      setIsLoading(false);
+    }
 
     return () => {
       isMounted = false;

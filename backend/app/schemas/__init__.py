@@ -6,6 +6,27 @@ from app.schemas.ui_analysis import (
     UIIntermediateRepresentation,
     UIComponentIR,
 )
+from app.schemas.code_generation import (
+    CodeFileSchema,
+    GenerationMetricsSchema,
+    GenerationManifestSchema,
+    CodeGenerationRequest,
+    CodeGenerationResponse,
+)
+
+from app.schemas.comparison import (
+    VisualDisparity,
+    MetricBreakdown,
+    ComparisonRequest,
+    ComparisonResult,
+)
+
+from app.schemas.refinement import (
+    RefinementPromptSchema,
+    RefinementVersionSchema,
+    SubmitRefinementPayload,
+    RefinementResult,
+)
 
 __all__ = [
     "ProjectCreate",
@@ -15,4 +36,18 @@ __all__ = [
     "AnalysisResponse",
     "UIIntermediateRepresentation",
     "UIComponentIR",
+    "CodeFileSchema",
+    "GenerationMetricsSchema",
+    "GenerationManifestSchema",
+    "CodeGenerationRequest",
+    "CodeGenerationResponse",
+    "VisualDisparity",
+    "MetricBreakdown",
+    "ComparisonRequest",
+    "ComparisonResult",
+    "RefinementPromptSchema",
+    "RefinementVersionSchema",
+    "SubmitRefinementPayload",
+    "RefinementResult",
 ]
+

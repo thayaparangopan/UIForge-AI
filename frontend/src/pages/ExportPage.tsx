@@ -22,7 +22,16 @@ import {
   FileText
 } from 'lucide-react';
 
+import { useWorkflow } from '../hooks/useWorkflow';
+
 export default function App() {
+  const { state: workflowState } = useWorkflow();
+  const generationId = workflowState.generationId || 'demo_gen';
+  const downloadUrl = `/api/download/${generationId}.zip`;
+
+  const handleDownload = () => {
+    window.open(downloadUrl, '_blank');
+  };
   const steps = [
     { id: 1, label: 'Upload', state: 'completed' },
     { id: 2, label: 'Analyze', state: 'completed' },
@@ -95,10 +104,13 @@ export default function App() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <button className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-bold shadow-md shadow-blue-500/20 transition-all">
+            <button 
+              onClick={handleDownload}
+              className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer"
+            >
               <Download className="w-5 h-5" />
               Download ZIP Bundle
-              <span className="bg-blue-800/50 text-blue-100 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ml-1 font-semibold">.zip (42 KB)</span>
+              <span className="bg-blue-800/50 text-blue-100 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ml-1 font-semibold">.zip</span>
             </button>
             <button className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-6 py-3.5 rounded-xl font-bold shadow-sm transition-all">
               <Copy className="w-5 h-5 text-slate-400" />
