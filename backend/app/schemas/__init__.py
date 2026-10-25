@@ -14,6 +14,13 @@ from app.schemas.code_generation import (
     CodeGenerationResponse,
 )
 
+from app.schemas.comparison import (
+    VisualDisparity,
+    MetricBreakdown,
+    ComparisonRequest,
+    ComparisonResult,
+)
+
 __all__ = [
     "ProjectCreate",
     "ProjectResponse",
@@ -27,5 +34,9 @@ __all__ = [
     "GenerationManifestSchema",
     "CodeGenerationRequest",
     "CodeGenerationResponse",
+    "VisualDisparity",
+    "MetricBreakdown",
+    "ComparisonRequest",
+    "ComparisonResult",
 ]
 
