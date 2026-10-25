@@ -21,6 +21,13 @@ from app.schemas.comparison import (
     ComparisonResult,
 )
 
+from app.schemas.refinement import (
+    RefinementPromptSchema,
+    RefinementVersionSchema,
+    SubmitRefinementPayload,
+    RefinementResult,
+)
+
 __all__ = [
     "ProjectCreate",
     "ProjectResponse",
@@ -38,5 +45,9 @@ __all__ = [
     "MetricBreakdown",
     "ComparisonRequest",
     "ComparisonResult",
+    "RefinementPromptSchema",
+    "RefinementVersionSchema",
+    "SubmitRefinementPayload",
+    "RefinementResult",
 ]
 
