@@ -12,7 +12,36 @@ import {
   BrainCircuit
 } from 'lucide-react';
 
+import { useWorkflow } from '../hooks/useWorkflow';
+import { generationService } from '../services/generationService';
+
 export default function AICodeGenerationPage() {
+  const { state: workflowState, setGeneration } = useWorkflow();
+
+  React.useEffect(() => {
+    let active = true;
+    async function triggerCodeGeneration() {
+      if (workflowState.generationResult) return;
+      if (!workflowState.analysisId && !workflowState.intermediateRepresentation) return;
+
+      try {
+        const res = await generationService.generateCode(
+          workflowState.analysisId || 'analysis_default',
+          workflowState.framework || 'react-native',
+          workflowState.intermediateRepresentation || undefined
+        );
+        if (active) {
+          setGeneration(res);
+        }
+      } catch (err: any) {
+        console.warn('Generation error:', err);
+      }
+    }
+
+    triggerCodeGeneration();
+    return () => { active = false; };
+  }, [workflowState.analysisId, workflowState.framework]);
+
   const steps = [
     { id: 1, label: 'Upload', state: 'completed' },
     { id: 2, label: 'Analyze', state: 'completed' },

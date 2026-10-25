@@ -16,7 +16,39 @@ import {
   CheckSquare
 } from 'lucide-react';
 
+import { refinementService, type RefinementResult } from '../services/refinementService';
+import { useWorkflow } from '../hooks/useWorkflow';
+
 export default function App() {
+  const { state: workflowState, setRefinement } = useWorkflow();
+  const [, setLocalRefinement] = React.useState<RefinementResult | null>(workflowState.refinementResult);
+  const [promptText, setPromptText] = React.useState(
+    "Make the 'Start Guest Order' button wider (full width 100%), increase the vertical padding to 16px, and move it slightly lower with 24px top margin for easier one-tap ordering."
+  );
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [statusMsg, setStatusMsg] = React.useState<string | null>(null);
+
+  const handleRefineSubmit = async () => {
+    if (!promptText.trim()) return;
+    setIsSubmitting(true);
+    setStatusMsg('Running AI code modification...');
+    try {
+      const genId = workflowState.generationId || 'gen_default';
+      const res = await refinementService.refineCode({
+        generationId: genId,
+        promptText,
+      });
+      setLocalRefinement(res);
+      setRefinement(res);
+      setStatusMsg('Refinement applied successfully!');
+    } catch (err: any) {
+      console.warn('Refinement error:', err);
+      setStatusMsg('Failed to apply refinement.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const steps = [
     { id: 1, label: 'Upload', state: 'completed' },
     { id: 2, label: 'Analyze', state: 'completed' },
@@ -184,26 +216,43 @@ export default function App() {
               <div className="p-5 flex flex-col gap-4">
                 <textarea 
                   className="w-full h-24 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none leading-relaxed"
-                  defaultValue="Make the 'Start Guest Order' button wider (full width 100%), increase the vertical padding to 16px, and move it slightly lower with 24px top margin for easier one-tap ordering."
+                  value={promptText}
+                  onChange={(e) => setPromptText(e.target.value)}
                 />
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-slate-500 mr-1">Quick Chips:</span>
-                    <button className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-1">
+                    <button 
+                      onClick={() => setPromptText((prev) => prev + " Apply rounded-2xl border radius.")}
+                      className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
                       <span className="text-slate-400">+</span> rounded-2xl
                     </button>
-                    <button className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-1">
+                    <button 
+                      onClick={() => setPromptText((prev) => prev + " Add cyan glowing accents.")}
+                      className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
                       <span className="text-slate-400">+</span> cyan glow
                     </button>
-                    <button className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-1">
+                    <button 
+                      onClick={() => setPromptText((prev) => prev + " Center and bold text headings.")}
+                      className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
                       <span className="text-slate-400">+</span> bold center
                     </button>
                   </div>
+                  {statusMsg && (
+                    <span className="text-xs text-blue-600 font-semibold">{statusMsg}</span>
+                  )}
                 </div>
 
-                <button className="self-start mt-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold text-sm px-6 py-3 rounded-xl flex items-center gap-2 shadow-md shadow-blue-500/20 hover:opacity-90 transition-opacity">
-                  <Sparkles className="w-4 h-4" /> Improve with AI
+                <button 
+                  onClick={handleRefineSubmit}
+                  disabled={isSubmitting}
+                  className="self-start mt-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold text-sm px-6 py-3 rounded-xl flex items-center gap-2 shadow-md shadow-blue-500/20 hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
+                >
+                  <Sparkles className="w-4 h-4" /> {isSubmitting ? 'Refining Code...' : 'Improve with AI'}
                 </button>
               </div>
             </div>

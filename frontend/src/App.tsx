@@ -10,55 +10,25 @@ import ComparisonPage from "./pages/ComparisonPage"
 import RefinementPage from "./pages/RefinementPage"
 import ExportPage from "./pages/ExportPage"
 
+import { WorkflowProvider } from "./hooks/useWorkflow"
+
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-
-        <Route path="/" element={<LandingPage />} />
-
-        <Route
-          path="/create"
-          element={<CreateProjectPage />}
-        />
-
-        <Route
-          path="/upload"
-          element={<UploadPage />}
-        />
-
-        <Route
-          path="/analysis"
-          element={<AnalysisPage />}
-        />
-
-        <Route
-          path="/generate"
-          element={<GenerationPage />}
-        />
-
-        <Route
-          path="/preview"
-          element={<PreviewPage />}
-        />
-
-        <Route
-          path="/compare"
-          element={<ComparisonPage />}
-        />
-
-        <Route
-          path="/refine"
-          element={<RefinementPage />}
-        />
-
-        <Route
-          path="/export"
-          element={<ExportPage />}
-        />
-
-      </Routes>
-    </BrowserRouter>
+    <WorkflowProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/create" element={<CreateProjectPage />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/analysis" element={<AnalysisPage />} />
+          <Route path="/generate" element={<GenerationPage />} />
+          <Route path="/preview" element={<PreviewPage />} />
+          <Route path="/compare" element={<ComparisonPage />} />
+          <Route path="/refine" element={<RefinementPage />} />
+          <Route path="/export" element={<ExportPage />} />
+        </Routes>
+      </BrowserRouter>
+    </WorkflowProvider>
   )
 }
 

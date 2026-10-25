@@ -12,7 +12,7 @@ from app.services.refinement_service import (
 from app.api.generation import GENERATION_CACHE
 
 router = APIRouter(
-    prefix="/api/v1",
+    prefix="/api",
     tags=["Code Refinement"]
 )
 

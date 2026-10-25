@@ -13,7 +13,7 @@ from app.schemas.comparison import (
 from app.services.comparison_service import run_visual_comparison
 
 router = APIRouter(
-    prefix="/api/v1",
+    prefix="/api",
     tags=["Visual Comparison"]
 )
 

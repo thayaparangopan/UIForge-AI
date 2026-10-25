@@ -13,11 +13,14 @@ import {
   Loader2
 } from 'lucide-react';
 import { createProject } from '../services/projectApi';
+import { useWorkflow } from '../hooks/useWorkflow';
+import type { TargetFramework } from '../services/projectService';
 
 export default function CreateProject() {
   const navigate = useNavigate();
+  const { setProject } = useWorkflow();
   const [projectName, setProjectName] = useState('Restaurant Mobile App');
-  const [selectedFramework, setSelectedFramework] = useState('react-native');
+  const [selectedFramework, setSelectedFramework] = useState<TargetFramework>('react-native');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
@@ -75,6 +78,7 @@ export default function CreateProject() {
       console.log('Success! PostgreSQL record created:', newProject);
       setStatusMessage('Project created successfully!');
       localStorage.setItem('activeProjectId', newProject.id);
+      setProject(newProject.id, projectName, selectedFramework);
       
       // Brief pause to display success before navigation
       setTimeout(() => {
@@ -183,7 +187,7 @@ export default function CreateProject() {
                   return (
                     <div 
                       key={fw.id}
-                      onClick={() => setSelectedFramework(fw.id)}
+                      onClick={() => setSelectedFramework(fw.id as TargetFramework)}
                       className={`relative rounded-2xl border-2 p-6 cursor-pointer transition-all duration-200 flex flex-col h-full ${
                         isSelected 
                           ? 'border-blue-600 bg-[#F4F8FF] shadow-sm' 
