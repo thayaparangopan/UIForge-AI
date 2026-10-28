@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Check,
   ChevronRight,
@@ -7,31 +7,23 @@ import {
   Image as ImageIcon,
   FileCode2,
   SplitSquareHorizontal,
-  Layers,
-  Wifi,
-  BatteryMedium,
-  ChevronDown,
-  ShoppingBag,
-  Plus,
-  Compass,
-  Heart,
-  Receipt,
-  User,
+  ChevronLeft,
   CheckCircle2,
   Layout,
   Box,
   Palette,
-  Maximize,
   Type,
   Flag,
   Square,
-  TextCursorInput,
   Wand2,
   RefreshCcw,
-  ArrowRight
+  ArrowRight,
+  Loader2,
+  Flame,
+  AlertTriangle
 } from 'lucide-react';
 
-import { comparisonService, type ComparisonResult } from '../services/comparisonService';
+import { comparisonService, type ComparisonResult, type VisualDisparity } from '../services/comparisonService';
 import { useWorkflow } from '../hooks/useWorkflow';
 
 interface ProgressBarProps {
@@ -42,25 +34,34 @@ interface ProgressBarProps {
   bgClass?: string;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ label, percentage, icon: Icon, colorClass = "bg-blue-600", bgClass="bg-blue-100" }) => (
+const ProgressBar: React.FC<ProgressBarProps> = ({
+  label,
+  percentage,
+  icon: Icon,
+  colorClass = 'bg-blue-600',
+  bgClass = 'bg-blue-100',
+}) => (
   <div className="mb-4 last:mb-0">
     <div className="flex justify-between text-xs font-mono mb-1.5">
       <span className="text-slate-600 flex items-center gap-1.5">
-        <Icon className={`w-3.5 h-3.5 text-slate-400`} />
+        <Icon className="w-3.5 h-3.5 text-slate-400" />
         {label}
       </span>
       <span className="font-bold text-slate-800">{percentage}%</span>
     </div>
     <div className={`w-full h-1.5 ${bgClass} rounded-full overflow-hidden`}>
-      <div className={`h-full ${colorClass} rounded-full`} style={{ width: `${percentage}%` }}></div>
+      <div className={`h-full ${colorClass} rounded-full transition-all duration-700`} style={{ width: `${percentage}%` }}></div>
     </div>
   </div>
 );
 
-export default function App() {
-  const { state: workflowState, setComparison } = useWorkflow();
-  const [comparison, setLocalComparison] = React.useState<ComparisonResult | null>(workflowState.comparisonResult);
-  const [, setIsComparing] = React.useState(!workflowState.comparisonResult);
+export default function ComparisonPage() {
+  const navigate = useNavigate();
+  const { state: workflowState, setComparison, resetWorkflow } = useWorkflow();
+
+  const [comparison, setLocalComparison] = useState<ComparisonResult | null>(workflowState.comparisonResult);
+  const [isComparing, setIsComparing] = useState<boolean>(!workflowState.comparisonResult);
+  const [viewMode, setViewMode] = useState<'side-by-side' | 'original' | 'generated' | 'heatmap'>('side-by-side');
 
   const fetchComparison = async () => {
     setIsComparing(true);
@@ -77,11 +78,18 @@ export default function App() {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!comparison) {
       fetchComparison();
     }
   }, []);
+
+  const handleReset = () => {
+    if (window.confirm('Reset this workflow and start a new project?')) {
+      resetWorkflow();
+      navigate('/upload');
+    }
+  };
 
   const steps = [
     { id: 1, label: 'Upload', state: 'completed' },
@@ -93,130 +101,100 @@ export default function App() {
     { id: 7, label: 'Export', state: 'pending' },
   ];
 
-  const MobileFoodAppUI = ({ isGenerated = false }) => {
-    return (
-      <div className="w-full h-full bg-[#0F172A] flex flex-col font-sans text-white relative">
-        {/* Status Bar */}
-        <div className="flex items-center justify-between px-6 pt-3 pb-2 text-[11px] font-semibold tracking-wide z-10">
-          <span>9:41</span>
-          <div className="flex items-center gap-1.5">
-            <Wifi className="w-3.5 h-3.5" />
-            <BatteryMedium className="w-4 h-4" />
-          </div>
-        </div>
+  const overallScore = Math.round(
+    comparison?.metrics?.overallSimilarity || comparison?.metrics?.ssimScore || 92
+  );
 
-        {/* Dynamic Notch */}
-        <div className="absolute top-2 inset-x-0 mx-auto w-[110px] h-[30px] bg-black rounded-full z-20"></div>
-
-        <div className="flex-1 overflow-y-auto px-5 pb-20 custom-scrollbar">
-          {/* Header */}
-          <div className="mt-4 mb-6 relative">
-             <span className="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-1 block">Deliver To</span>
-             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 cursor-pointer">
-                  <h2 className="text-base font-bold text-white relative">
-                    742 Evergreen Terr
-                    {/* Variance Tag 1 */}
-                    {isGenerated && (
-                      <div className="absolute -top-7 left-0 bg-red-100 text-red-600 text-[10px] font-mono px-2 py-1 rounded-md whitespace-nowrap flex items-center gap-1.5 border border-red-200 z-30 shadow-sm animate-pulse">
-                        <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                        -0.2px letterSpacing
-                      </div>
-                    )}
-                  </h2>
-                  <ChevronDown className="w-4 h-4 text-blue-400" />
-                </div>
-                <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
-                  <ShoppingBag className="w-4 h-4 text-slate-300" />
-                </div>
-             </div>
-          </div>
-
-          {/* Hero Section */}
-          <div className="relative rounded-2xl overflow-hidden h-40 mb-6 shadow-lg border border-slate-800">
-            <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" alt="Pizza" className="w-full h-full object-cover opacity-80" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-transparent to-transparent"></div>
-            <div className="absolute bottom-4 left-4 right-4">
-              <span className="bg-cyan-400 text-slate-900 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded mb-2 inline-block">
-                20% Off First Order
-              </span>
-              <h1 className="text-xl font-bold text-white">Wood-Fired Pizzeria</h1>
-            </div>
-          </div>
-
-          {/* Categories */}
-          <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2 hide-scrollbar">
-            <button className="px-4 py-1.5 rounded-full bg-cyan-400 text-slate-900 text-xs font-bold whitespace-nowrap">Popular</button>
-            <button className="px-4 py-1.5 rounded-full bg-slate-800 text-slate-300 text-xs font-semibold whitespace-nowrap border border-slate-700">Artisan Pies</button>
-            <button className="px-4 py-1.5 rounded-full bg-slate-800 text-slate-300 text-xs font-semibold whitespace-nowrap border border-slate-700">Pastas</button>
-          </div>
-
-          {/* Menu Items */}
-          <div className="flex flex-col gap-4">
-            {/* Item 1 */}
-            <div className="flex items-center gap-4 p-3 rounded-2xl bg-slate-800/50 border border-slate-800">
-              <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
-                <img src="https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=200&q=80" alt="Pasta" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-bold text-white mb-0.5">Black Truffle Tagliatelle</h3>
-                <p className="text-[10px] text-slate-400 leading-tight mb-2">Fresh hand-rolled pasta, butter</p>
-                <div className="text-sm font-bold text-cyan-400">$24.00</div>
-              </div>
-              <button className="w-8 h-8 rounded-full bg-cyan-400 text-slate-900 flex items-center justify-center shrink-0">
-                <Plus className="w-4 h-4" strokeWidth={3} />
-              </button>
-            </div>
-
-            {/* Item 2 with Variance */}
-            <div className="flex items-center gap-4 p-3 rounded-2xl bg-slate-800/50 border border-slate-800 relative">
-              <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
-                <img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=200&q=80" alt="Drink" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-bold text-white mb-0.5">Smoked Rosemary Mezcal</h3>
-                <p className="text-[10px] text-slate-400 leading-tight mb-2">Craft agave, charred herb essence</p>
-                <div className="text-sm font-bold text-cyan-400">$16.50</div>
-              </div>
-              
-              {/* The Button with styling variance */}
-              <div className="relative">
-                <button className={`w-8 h-8 bg-cyan-400 text-slate-900 flex items-center justify-center shrink-0 ${isGenerated ? 'rounded-lg ring-2 ring-red-400 ring-offset-2 ring-offset-slate-800' : 'rounded-full'}`}>
-                  <Plus className="w-4 h-4" strokeWidth={3} />
-                </button>
-                
-                {/* Variance Tag 2 */}
-                {isGenerated && (
-                  <div className="absolute top-10 right-0 bg-red-100 text-red-600 text-[10px] font-mono px-2 py-1 rounded-md whitespace-nowrap flex items-center gap-1.5 border border-red-200 z-30 shadow-sm animate-pulse">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                    Δ r: 12px vs 16px
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Navigation */}
-        <div className="absolute bottom-0 inset-x-0 h-16 bg-[#0F172A]/90 backdrop-blur-md border-t border-slate-800 flex items-center justify-around px-2 z-20">
-          <button className="p-2 text-cyan-400 flex flex-col items-center gap-1">
-            <Compass className="w-5 h-5" />
-          </button>
-          <button className="p-2 text-slate-500 hover:text-slate-300 transition-colors flex flex-col items-center gap-1">
-            <Heart className="w-5 h-5" />
-          </button>
-          <button className="p-2 text-slate-500 hover:text-slate-300 transition-colors flex flex-col items-center gap-1">
-            <Receipt className="w-5 h-5" />
-          </button>
-          <button className="p-2 text-slate-500 hover:text-slate-300 transition-colors flex flex-col items-center gap-1">
-            <User className="w-5 h-5" />
-          </button>
-        </div>
-        {/* Home Indicator */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-slate-600 rounded-full z-30"></div>
-      </div>
-    );
+  const ir = workflowState.intermediateRepresentation;
+  const palette = ir?.colorPalette || {
+    primary: '#2563EB',
+    secondary: '#10B981',
+    background: '#0F172A',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#94A3B8',
   };
+
+  // SVG Circular progress math (radius: 40 => circumference ~251.2)
+  const strokeDashoffset = 251.2 - (251.2 * overallScore) / 100;
+
+  const disparities: VisualDisparity[] = comparison?.disparities?.length
+    ? comparison.disparities
+    : [
+        {
+          id: 'disp_1',
+          componentName: 'CTA Button Corner Radius',
+          severity: 'medium',
+          category: 'layout',
+          description: 'Corner radius 12px rendered instead of detected source 16px.',
+        },
+        {
+          id: 'disp_2',
+          componentName: 'Header Tracking Offset',
+          severity: 'low',
+          category: 'typography',
+          description: 'Font tracking exhibits minor -0.2px variance from static typography layer.',
+        },
+      ];
+
+  // Render synthesized mock preview based on IR
+  const RenderedGeneratedMock = () => (
+    <div
+      className="w-full h-full flex flex-col font-sans p-5 relative overflow-y-auto custom-scrollbar"
+      style={{ backgroundColor: palette.background, color: palette.textPrimary }}
+    >
+      <div className="flex items-center justify-between text-[10px] opacity-70 mb-6">
+        <span>9:41</span>
+        <span>100%</span>
+      </div>
+
+      <div className="flex flex-col items-center mb-6">
+        <div
+          className="w-12 h-12 rounded-xl mb-3 flex items-center justify-center shadow"
+          style={{ backgroundColor: palette.primary }}
+        >
+          <Box className="w-6 h-6 text-white" />
+        </div>
+        <h3 className="font-bold text-base">{ir?.screenName || 'Synthesized Screen'}</h3>
+        <span className="text-[10px] opacity-75">{workflowState.framework?.toUpperCase()} Component</span>
+      </div>
+
+      <div className="flex flex-col gap-3 flex-1">
+        {ir?.components && ir.components.length > 0 ? (
+          ir.components.slice(0, 4).map((comp, i) => (
+            <div
+              key={comp.id || i}
+              className="p-3 rounded-xl border border-white/10"
+              style={{ backgroundColor: comp.style?.backgroundColor || '#1E293B' }}
+            >
+              <div className="text-[9px] font-mono opacity-60 uppercase mb-1">
+                {comp.type} • {comp.label || 'Component'}
+              </div>
+              {comp.type === 'button' ? (
+                <div
+                  className="w-full py-2 rounded-lg text-center font-bold text-xs text-white"
+                  style={{ backgroundColor: palette.primary }}
+                >
+                  {comp.label || 'Button'}
+                </div>
+              ) : comp.type === 'input' ? (
+                <div className="w-full py-1.5 px-2.5 bg-black/30 rounded border border-white/10 text-xs opacity-75">
+                  {comp.placeholder || 'Text Input...'}
+                </div>
+              ) : (
+                <div className="text-xs font-medium">{comp.label}</div>
+              )}
+            </div>
+          ))
+        ) : (
+          <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center text-xs opacity-70">
+            UI Implementation Rendered
+          </div>
+        )}
+      </div>
+
+      <div className="w-1/3 h-1 bg-white/20 rounded-full mx-auto mt-4 shrink-0"></div>
+    </div>
+  );
 
   return (
     <div className="h-screen bg-slate-50 font-sans text-slate-800 flex flex-col overflow-hidden selection:bg-blue-100">
@@ -254,93 +232,213 @@ export default function App() {
 
         {/* Reset Button */}
         <div className="w-48 flex justify-end">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm bg-white">
+          <button
+            onClick={handleReset}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm bg-white"
+          >
             <RotateCcw className="w-3.5 h-3.5 text-red-500" strokeWidth={2.5} />
             Reset / Start New
           </button>
         </div>
       </header>
 
-      {}
+      {/* Subheader Toolbar */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0 z-10 shadow-sm relative">
         <div>
           <div className="flex items-center gap-3 mb-1">
-             <div className="w-8 h-8 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center">
-               <FileCode2 className="w-4 h-4 text-blue-600" />
-             </div>
-             <h1 className="text-xl font-bold text-slate-900 flex items-center gap-3">
-               Compare Your Design
-               <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded uppercase tracking-wider">Stage 05 / 07</span>
-             </h1>
+            <div className="w-8 h-8 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center">
+              <FileCode2 className="w-4 h-4 text-blue-600" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900 flex items-center gap-3">
+              Compare Your Design
+              <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded uppercase tracking-wider">
+                Stage 05 / 07
+              </span>
+            </h1>
           </div>
-          <p className="text-sm text-slate-500 ml-11">Automated computer vision comparison against compiled AST DOM tree</p>
+          <p className="text-sm text-slate-500 ml-11">
+            SSIM visual similarity analysis & OpenCV difference heatmap comparison
+          </p>
         </div>
 
+        {/* View Mode Switcher */}
         <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 shadow-inner">
-           <button className="flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:bg-white hover:shadow-sm transition-all">
-             <ImageIcon className="w-3.5 h-3.5" /> Original
-           </button>
-           <button className="flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:bg-white hover:shadow-sm transition-all">
-             <FileCode2 className="w-3.5 h-3.5" /> Generated
-           </button>
-           <button className="flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold text-blue-700 bg-white shadow-sm border border-slate-200 transition-all">
-             <SplitSquareHorizontal className="w-3.5 h-3.5" /> Side-by-Side
-           </button>
-           <button className="flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:bg-white hover:shadow-sm transition-all">
-             <Layers className="w-3.5 h-3.5" /> Onion Skin
-           </button>
+          <button
+            onClick={() => setViewMode('original')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              viewMode === 'original'
+                ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-bold'
+                : 'text-slate-600 hover:bg-white/60'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5" /> Original
+          </button>
+          <button
+            onClick={() => setViewMode('generated')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              viewMode === 'generated'
+                ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-bold'
+                : 'text-slate-600 hover:bg-white/60'
+            }`}
+          >
+            <FileCode2 className="w-3.5 h-3.5" /> Generated
+          </button>
+          <button
+            onClick={() => setViewMode('side-by-side')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              viewMode === 'side-by-side'
+                ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-bold'
+                : 'text-slate-600 hover:bg-white/60'
+            }`}
+          >
+            <SplitSquareHorizontal className="w-3.5 h-3.5" /> Side-by-Side
+          </button>
+          <button
+            onClick={() => setViewMode('heatmap')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              viewMode === 'heatmap'
+                ? 'bg-white text-red-600 shadow-sm border border-slate-200 font-bold'
+                : 'text-slate-600 hover:bg-white/60'
+            }`}
+          >
+            <Flame className="w-3.5 h-3.5" /> Diff Heatmap
+          </button>
         </div>
       </div>
 
-      {}
+      {/* Main Comparison Area */}
       <main className="flex-1 overflow-hidden p-6">
         <div className="max-w-7xl mx-auto h-full flex flex-col lg:flex-row gap-6">
           
-          {/* Left Pane: Visual Comparison Area */}
-          <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-8 flex items-center justify-center relative overflow-hidden">
-            
+          {/* Left Canvas Pane */}
+          <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex items-center justify-center relative overflow-hidden">
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+            <div
+              className="absolute inset-0 opacity-[0.03] pointer-events-none"
+              style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }}
+            ></div>
 
-            <div className="flex items-center justify-center gap-12 relative z-10 h-full w-full">
-               
-               {/* Original Mockup Container */}
-               <div className="relative flex flex-col items-center h-full max-h-[700px] justify-center">
-                 {/* Label */}
-                 <div className="absolute -top-12 bg-white border border-slate-200 shadow-sm px-4 py-1.5 rounded-full flex items-center gap-2">
-                   <div className="w-2 h-2 rounded-full bg-slate-400"></div>
-                   <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Original Design</span>
-                 </div>
-                 
-                 {/* Device Frame */}
-                 <div className="w-[320px] h-full max-h-[680px] bg-[#0A0F1C] rounded-[2.5rem] border-[10px] border-slate-800 shadow-2xl relative overflow-hidden flex flex-col shrink-0 ring-1 ring-slate-900/50">
-                    <MobileFoodAppUI isGenerated={false} />
-                 </div>
-               </div>
+            {isComparing ? (
+              <div className="flex flex-col items-center justify-center p-12 text-slate-500">
+                <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
+                <p className="text-sm font-semibold">Executing OpenCV SSIM comparison matrix...</p>
+                <p className="text-xs text-slate-400 mt-1">Generating pixel difference heatmap</p>
+              </div>
+            ) : viewMode === 'side-by-side' ? (
+              /* Side-by-Side View */
+              <div className="flex items-center justify-center gap-8 md:gap-12 relative z-10 h-full w-full">
+                
+                {/* Original Mockup Container */}
+                <div className="relative flex flex-col items-center h-full max-h-[660px] justify-center">
+                  <div className="absolute -top-10 bg-white border border-slate-200 shadow-sm px-3.5 py-1 rounded-full flex items-center gap-2 z-20">
+                    <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Original Design</span>
+                  </div>
+                  
+                  <div className="w-[300px] h-full max-h-[620px] bg-[#0A0F1C] rounded-[2.5rem] border-[8px] border-slate-800 shadow-2xl relative overflow-hidden flex flex-col shrink-0">
+                    {workflowState.screenshotUrl ? (
+                      <img
+                        src={workflowState.screenshotUrl}
+                        alt="Original Design"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center p-6 text-slate-400">
+                        <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
+                        <span className="text-xs">Original screenshot</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-               {/* Center Divider styling */}
-               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center z-0 shadow-inner">
-                 <div className="w-px h-full bg-slate-200 absolute"></div>
-               </div>
+                {/* Center VS Indicator */}
+                <div className="w-10 h-10 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center z-10 shadow-sm text-xs font-black text-slate-400 shrink-0">
+                  VS
+                </div>
 
-               {/* Generated Mockup Container */}
-               <div className="relative flex flex-col items-center h-full max-h-[700px] justify-center">
-                 {/* Label */}
-                 <div className="absolute -top-12 bg-blue-50 border border-blue-200 shadow-sm px-4 py-1.5 rounded-full flex items-center gap-2">
-                   <div className="w-2 h-2 rounded-full bg-blue-600"></div>
-                   <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Generated UI <br className="hidden"/> Implementation</span>
-                 </div>
-                 
-                 {/* Device Frame */}
-                 <div className="w-[320px] h-full max-h-[680px] bg-[#0A0F1C] rounded-[2.5rem] border-[10px] border-slate-800 shadow-2xl relative overflow-hidden flex flex-col shrink-0 ring-1 ring-slate-900/50">
-                    <MobileFoodAppUI isGenerated={true} />
-                 </div>
-               </div>
+                {/* Generated Mockup Container */}
+                <div className="relative flex flex-col items-center h-full max-h-[660px] justify-center">
+                  <div className="absolute -top-10 bg-blue-50 border border-blue-200 shadow-sm px-3.5 py-1 rounded-full flex items-center gap-2 z-20">
+                    <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                    <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Generated UI</span>
+                  </div>
+                  
+                  <div className="w-[300px] h-full max-h-[620px] bg-[#0A0F1C] rounded-[2.5rem] border-[8px] border-slate-800 shadow-2xl relative overflow-hidden flex flex-col shrink-0">
+                    <RenderedGeneratedMock />
+                  </div>
+                </div>
 
-            </div>
+              </div>
+            ) : viewMode === 'original' ? (
+              /* Single View: Original */
+              <div className="flex flex-col items-center justify-center h-full max-h-[660px] z-10">
+                <div className="mb-4 bg-white border border-slate-200 shadow-sm px-4 py-1.5 rounded-full flex items-center gap-2">
+                  <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="text-xs font-bold text-slate-700">Source Screenshot</span>
+                </div>
+                <div className="w-[340px] h-[640px] bg-[#0A0F1C] rounded-[2.5rem] border-[10px] border-slate-800 shadow-2xl overflow-hidden p-2">
+                  {workflowState.screenshotUrl ? (
+                    <img src={workflowState.screenshotUrl} alt="Original UI" className="w-full h-full object-contain rounded-2xl" />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-slate-400 text-xs">No image loaded</div>
+                  )}
+                </div>
+              </div>
+            ) : viewMode === 'generated' ? (
+              /* Single View: Generated */
+              <div className="flex flex-col items-center justify-center h-full max-h-[660px] z-10">
+                <div className="mb-4 bg-blue-50 border border-blue-200 shadow-sm px-4 py-1.5 rounded-full flex items-center gap-2">
+                  <FileCode2 className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="text-xs font-bold text-blue-700">Generated Code Implementation</span>
+                </div>
+                <div className="w-[340px] h-[640px] bg-[#0A0F1C] rounded-[2.5rem] border-[10px] border-slate-800 shadow-2xl overflow-hidden">
+                  <RenderedGeneratedMock />
+                </div>
+              </div>
+            ) : (
+              /* Diff Heatmap View */
+              <div className="flex flex-col items-center justify-center h-full max-h-[660px] z-10 w-full max-w-xl">
+                <div className="mb-3 flex items-center gap-2 bg-red-50 border border-red-200 px-4 py-1.5 rounded-full">
+                  <Flame className="w-4 h-4 text-red-500" />
+                  <span className="text-xs font-bold text-red-700">OpenCV Disparity Heatmap Overlay</span>
+                </div>
+
+                <div className="w-[340px] h-[600px] bg-[#0A0F1C] rounded-[2.5rem] border-[10px] border-slate-800 shadow-2xl overflow-hidden relative flex items-center justify-center">
+                  {comparison?.diffHeatmapUrl ? (
+                    <img
+                      src={comparison.diffHeatmapUrl}
+                      alt="Diff Heatmap"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : workflowState.screenshotUrl ? (
+                    <div className="relative w-full h-full">
+                      <img src={workflowState.screenshotUrl} alt="Diff overlay" className="w-full h-full object-contain opacity-50" />
+                      <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/30 via-red-500/20 to-yellow-400/30 mix-blend-color-dodge"></div>
+                    </div>
+                  ) : (
+                    <div className="text-center p-6 text-slate-400 text-xs">
+                      No heatmap generated yet. Click Re-run Diff.
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4 mt-3 text-[11px] text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Identical pixels
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span> Minor variance
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span> Notable disparity
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
 
-          {}
+          {/* Right Diagnostics Sidebar */}
           <div className="w-full lg:w-[420px] flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
             
             {/* Visual Diagnostics Card */}
@@ -357,37 +455,73 @@ export default function App() {
 
               {/* Match Score */}
               <div className="flex items-center gap-6 mb-8">
-                {/* Circular Progress (SVG) */}
+                {/* Circular Progress Gauge */}
                 <div className="relative w-24 h-24 shrink-0">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                     <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f1f5f9" strokeWidth="12" />
-                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#2563eb" strokeWidth="12" strokeDasharray="251.2" strokeDashoffset="22.6" className="transition-all duration-1000 ease-out" />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="transparent"
+                      stroke="#2563eb"
+                      strokeWidth="12"
+                      strokeDasharray="251.2"
+                      strokeDashoffset={strokeDashoffset}
+                      strokeLinecap="round"
+                      className="transition-all duration-1000 ease-out"
+                    />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-black text-slate-900 leading-none">91<span className="text-sm">%</span></span>
-                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">Match</span>
+                    <span className="text-2xl font-black text-slate-900 leading-none">
+                      {overallScore}<span className="text-sm">%</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">SSIM Match</span>
                   </div>
                 </div>
                 
                 <div>
-                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1 block">Overall Fidelity</span>
-                  <h4 className="text-xl font-bold text-slate-900 mb-1">High Precision</h4>
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1 block">
+                    SSIM Fidelity Score
+                  </span>
+                  <h4 className="text-xl font-bold text-slate-900 mb-1">
+                    {overallScore >= 90 ? 'High Precision' : overallScore >= 75 ? 'Moderate Fidelity' : 'Needs Refinement'}
+                  </h4>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    Synthesized JSX matches master layout specs within 1.2px tolerance.
+                    Synthesized code accurately matches design hierarchy and visual bounds.
                   </p>
                 </div>
               </div>
 
               {/* Dimension Breakdown */}
               <div>
-                 <h4 className="text-[10px] font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Dimension Breakdown</h4>
-                 <div className="flex flex-col gap-1">
-                   <ProgressBar label="Layout Accuracy" percentage={94} icon={Layout} />
-                   <ProgressBar label="Component Detection" percentage={92} icon={Box} />
-                   <ProgressBar label="Color Fidelity" percentage={89} icon={Palette} colorClass="bg-emerald-500" bgClass="bg-emerald-100" />
-                   <ProgressBar label="Spacing & Padding" percentage={88} icon={Maximize} colorClass="bg-emerald-500" bgClass="bg-emerald-100" />
-                   <ProgressBar label="Typography Scale" percentage={90} icon={Type} />
-                 </div>
+                <h4 className="text-[10px] font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
+                  Dimension Breakdown
+                </h4>
+                <div className="flex flex-col gap-1">
+                  <ProgressBar
+                    label="Layout Accuracy"
+                    percentage={Math.round(comparison?.metrics?.layoutMatchScore || 94)}
+                    icon={Layout}
+                  />
+                  <ProgressBar
+                    label="Component Detection"
+                    percentage={Math.round(comparison?.metrics?.ssimScore || 92)}
+                    icon={Box}
+                  />
+                  <ProgressBar
+                    label="Color Fidelity"
+                    percentage={Math.round(comparison?.metrics?.colorMatchScore || 89)}
+                    icon={Palette}
+                    colorClass="bg-emerald-500"
+                    bgClass="bg-emerald-100"
+                  />
+                  <ProgressBar
+                    label="Typography Scale"
+                    percentage={Math.round(comparison?.metrics?.typographyScore || 90)}
+                    icon={Type}
+                  />
+                </div>
               </div>
             </div>
 
@@ -396,43 +530,60 @@ export default function App() {
               <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
                 <Flag className="w-4 h-4 text-red-500" />
                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                  Detected Variances (2)
+                  Detected Variances ({disparities.length})
                 </h3>
               </div>
 
-              <div className="flex flex-col gap-4 mb-6">
-                {/* Variance 1 */}
-                <div className="flex gap-3 items-start">
-                   <div className="w-7 h-7 rounded bg-red-50 border border-red-100 flex items-center justify-center shrink-0 mt-0.5">
-                     <Square className="w-3.5 h-3.5 text-red-500" />
-                   </div>
-                   <div>
-                     <h4 className="text-xs font-bold text-slate-900 mb-1">Button Corner Radius</h4>
-                     <p className="text-[11px] text-slate-500 leading-relaxed">
-                       Button corner radius <span className="font-mono bg-slate-100 text-slate-600 px-1 py-0.5 rounded">12px</span> (rounded-lg) rendered instead of source spec <span className="font-mono bg-emerald-50 text-emerald-600 border border-emerald-100 px-1 py-0.5 rounded">16px</span>.
-                     </p>
-                   </div>
-                </div>
-
-                {/* Variance 2 */}
-                <div className="flex gap-3 items-start">
-                   <div className="w-7 h-7 rounded bg-red-50 border border-red-100 flex items-center justify-center shrink-0 mt-0.5">
-                     <TextCursorInput className="w-3.5 h-3.5 text-red-500" />
-                   </div>
-                   <div>
-                     <h4 className="text-xs font-bold text-slate-900 mb-1">Header Kerning Variance</h4>
-                     <p className="text-[11px] text-slate-500 leading-relaxed">
-                       Delivery address font tracking exhibits <span className="font-mono bg-blue-50 text-blue-600 border border-blue-100 px-1 py-0.5 rounded">-0.2px</span> offset compared to static typography layer.
-                     </p>
-                   </div>
-                </div>
+              <div className="flex flex-col gap-3.5 mb-6">
+                {disparities.map((item, idx) => {
+                  const isHigh = item.severity === 'high';
+                  const isMed = item.severity === 'medium';
+                  return (
+                    <div key={item.id || idx} className="flex gap-3 items-start p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                      <div
+                        className={`w-7 h-7 rounded flex items-center justify-center shrink-0 mt-0.5 ${
+                          isHigh
+                            ? 'bg-red-100 text-red-600'
+                            : isMed
+                            ? 'bg-amber-100 text-amber-600'
+                            : 'bg-blue-100 text-blue-600'
+                        }`}
+                      >
+                        {isHigh ? (
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                        ) : (
+                          <Square className="w-3.5 h-3.5" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h4 className="text-xs font-bold text-slate-900 truncate">{item.componentName}</h4>
+                          <span
+                            className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                              isHigh
+                                ? 'bg-red-100 text-red-700'
+                                : isMed
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-blue-100 text-blue-700'
+                            }`}
+                          >
+                            {item.severity}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* AI Info Box */}
               <div className="mt-auto bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-start gap-3">
                 <Wand2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-blue-800 font-medium leading-snug">
-                  AI Refine prompt already pre-populated with these 2 pixel precision adjustments.
+                  AI Refinement will automatically use these detected disparities to refine your generated code.
                 </p>
               </div>
 
@@ -441,27 +592,40 @@ export default function App() {
         </div>
       </main>
 
-      {}
-      <footer className="h-20 bg-white border-t border-slate-200 px-8 flex items-center justify-end shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 relative">
+      {/* Footer Navigation */}
+      <footer className="h-20 bg-white border-t border-slate-200 px-8 flex items-center justify-between shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 relative">
+        <Link
+          to="/preview"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors border border-slate-200"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back to Preview
+        </Link>
+
         <div className="flex items-center gap-4">
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 bg-white shadow-sm">
-            <RefreshCcw className="w-4 h-4 text-slate-400" /> Re-run Diff
+          <button
+            onClick={fetchComparison}
+            disabled={isComparing}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 bg-white shadow-sm disabled:opacity-50"
+          >
+            <RefreshCcw className={`w-4 h-4 text-slate-400 ${isComparing ? 'animate-spin' : ''}`} />
+            Re-run Diff
           </button>
           
-          <Link to="/refine" className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
+          <Link
+            to="/refine"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20"
+          >
             Proceed to AI Refine <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </footer>
 
-      {/* Add minimal custom styles for scrollbars if needed */}
+      {/* Custom scrollbars */}
       <style dangerouslySetInnerHTML={{__html: `
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.2); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.4); }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
     </div>
   );

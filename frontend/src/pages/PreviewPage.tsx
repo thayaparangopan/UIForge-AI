@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Check,
   ChevronRight,
@@ -7,25 +7,272 @@ import {
   FileCode2,
   Zap,
   Copy,
-  AlignLeft,
-  RefreshCw,
+  CheckCheck,
   MonitorSmartphone,
   Wifi,
   BatteryMedium,
-  Mail,
-  Lock,
-  EyeOff,
-  ArrowRight,
-  Fingerprint,
   ChevronLeft,
   Sparkles,
   Download,
   SplitSquareHorizontal,
   CheckCircle2,
-  ChevronDown
+  Smartphone,
+  Image as ImageIcon,
+  Edit3
 } from 'lucide-react';
 
-export default function App() {
+import { useWorkflow } from '../hooks/useWorkflow';
+import type { CodeFile } from '../services/generationService';
+
+export default function PreviewPage() {
+  const navigate = useNavigate();
+  const { state: workflowState, resetWorkflow } = useWorkflow();
+
+  const [files, setFiles] = useState<CodeFile[]>(workflowState.generatedFiles || []);
+  const [selectedFilePath, setSelectedFilePath] = useState<string>('');
+  const [copied, setCopied] = useState<boolean>(false);
+  const [previewTab, setPreviewTab] = useState<'device' | 'original'>('device');
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editableCode, setEditableCode] = useState<string>('');
+
+  // Fallback initial files if user navigated directly or state wasn't generated yet
+  useEffect(() => {
+    if (workflowState.generatedFiles && workflowState.generatedFiles.length > 0) {
+      setFiles(workflowState.generatedFiles);
+      if (!selectedFilePath) {
+        setSelectedFilePath(workflowState.generatedFiles[0].path);
+        setEditableCode(workflowState.generatedFiles[0].content);
+      }
+    } else {
+      // Create fallback code based on intermediate representation or default
+      const screenName = workflowState.intermediateRepresentation?.screenName || 'LoginScreen';
+      const defaultFiles: CodeFile[] = [
+        {
+          path: `screens/${screenName}.tsx`,
+          name: `${screenName}.tsx`,
+          type: 'tsx',
+          sizeBytes: 2450,
+          content: `import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
+import { theme } from '../styles/theme';
+
+export default function ${screenName}() {
+  const [inputVal, setInputVal] = useState('');
+  const [password, setPassword] = useState('');
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>${workflowState.projectName || 'UIForge Mobile App'}</Text>
+        <Text style={styles.subtitle}>Generated with AI Vision Synthesis</Text>
+      </View>
+
+      <View style={styles.formCard}>
+        <Text style={styles.label}>Email Address</Text>
+        <TextInput
+          value={inputVal}
+          onChangeText={setInputVal}
+          placeholder="name@example.com"
+          placeholderTextColor={theme.colors.textSecondary}
+          style={styles.input}
+        />
+
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          placeholder="••••••••"
+          secureTextEntry
+          placeholderTextColor={theme.colors.textSecondary}
+          style={styles.input}
+        />
+
+        <TouchableOpacity style={styles.ctaButton} activeOpacity={0.8}>
+          <Text style={styles.ctaText}>Continue to Dashboard</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
+    marginTop: 6,
+  },
+  formCard: {
+    backgroundColor: theme.colors.card,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.textSecondary,
+    marginBottom: 6,
+  },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    marginBottom: 16,
+    color: theme.colors.textPrimary,
+  },
+  ctaButton: {
+    backgroundColor: theme.colors.primary,
+    height: 50,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  ctaText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+});
+`
+        },
+        {
+          path: 'styles/theme.ts',
+          name: 'theme.ts',
+          type: 'ts',
+          sizeBytes: 850,
+          content: `export const theme = {
+  colors: {
+    primary: '${workflowState.intermediateRepresentation?.colorPalette?.primary || '#2563EB'}',
+    secondary: '${workflowState.intermediateRepresentation?.colorPalette?.secondary || '#10B981'}',
+    background: '${workflowState.intermediateRepresentation?.colorPalette?.background || '#0F172A'}',
+    textPrimary: '${workflowState.intermediateRepresentation?.colorPalette?.textPrimary || '#FFFFFF'}',
+    textSecondary: '${workflowState.intermediateRepresentation?.colorPalette?.textSecondary || '#94A3B8'}',
+    card: '#1E293B',
+    border: '#334155',
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  borderRadius: {
+    sm: 8,
+    md: 12,
+    lg: 16,
+    full: 9999,
+  },
+};
+`
+        },
+        {
+          path: 'components/Header.tsx',
+          name: 'Header.tsx',
+          type: 'tsx',
+          sizeBytes: 940,
+          content: `import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { theme } from '../styles/theme';
+
+interface HeaderProps {
+  title: string;
+  subtitle?: string;
+}
+
+export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>{title}</Text>
+      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
+    marginTop: 4,
+  },
+});
+`
+        }
+      ];
+
+      setFiles(defaultFiles);
+      setSelectedFilePath(defaultFiles[0].path);
+      setEditableCode(defaultFiles[0].content);
+    }
+  }, [workflowState.generatedFiles, workflowState.intermediateRepresentation]);
+
+  const selectedFile = files.find((f) => f.path === selectedFilePath) || files[0];
+
+  const handleSelectFile = (file: CodeFile) => {
+    setSelectedFilePath(file.path);
+    setEditableCode(file.content);
+    setIsEditing(false);
+  };
+
+  const handleCopyCode = async () => {
+    if (selectedFile) {
+      await navigator.clipboard.writeText(editableCode || selectedFile.content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const updated = e.target.value;
+    setEditableCode(updated);
+    setFiles((prev) =>
+      prev.map((f) => (f.path === selectedFilePath ? { ...f, content: updated } : f))
+    );
+  };
+
+  const handleDownloadZip = () => {
+    const genId = workflowState.generationId || 'uiforge_export';
+    const downloadUrl = `/api/download/${genId}.zip`;
+    window.open(downloadUrl, '_blank');
+  };
+
+  const handleReset = () => {
+    if (window.confirm('Reset this workflow and start a new project?')) {
+      resetWorkflow();
+      navigate('/upload');
+    }
+  };
+
   const steps = [
     { id: 1, label: 'Upload', state: 'completed' },
     { id: 2, label: 'Analyze', state: 'completed' },
@@ -35,6 +282,17 @@ export default function App() {
     { id: 6, label: 'Refine', state: 'pending' },
     { id: 7, label: 'Export', state: 'pending' },
   ];
+
+  const ir = workflowState.intermediateRepresentation;
+  const palette = ir?.colorPalette || {
+    primary: '#2563EB',
+    secondary: '#10B981',
+    background: '#0F172A',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#94A3B8',
+  };
+
+  const codeLines = (editableCode || selectedFile?.content || '').split('\n');
 
   return (
     <div className="h-screen bg-[#F8FAFC] font-sans text-slate-800 flex flex-col overflow-hidden selection:bg-blue-100">
@@ -72,259 +330,291 @@ export default function App() {
 
         {/* Reset Button */}
         <div className="w-48 flex justify-end">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm bg-white">
+          <button
+            onClick={handleReset}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm bg-white"
+          >
             <RotateCcw className="w-3.5 h-3.5 text-red-500" strokeWidth={2.5} />
             Reset / Start New
           </button>
         </div>
       </header>
 
-      {}
       {/* Main Content Area */}
       <main className="flex-1 flex gap-4 p-4 min-h-0 overflow-hidden">
         
         {/* Left Pane - Code Editor */}
         <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden min-w-[500px]">
           
-          {/* Editor Toolbar */}
-          <div className="h-12 border-b border-slate-100 flex items-center justify-between px-3 bg-slate-50/50 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm">
-                <FileCode2 className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-bold text-blue-700">LoginScreen.tsx</span>
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-1"></div>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm cursor-pointer hover:bg-slate-50">
-                <Zap className="w-3.5 h-3.5 text-purple-500" />
-                <span className="text-xs font-semibold text-slate-700">React Native (TSX)</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-              </div>
+          {/* Editor Tabs & Toolbar */}
+          <div className="h-12 border-b border-slate-100 flex items-center justify-between px-3 bg-slate-50/70 shrink-0">
+            {/* File Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto py-1 custom-scrollbar">
+              {files.map((file) => {
+                const isActive = file.path === selectedFile?.path;
+                return (
+                  <button
+                    key={file.path}
+                    onClick={() => handleSelectFile(file)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-white border border-slate-200 shadow-sm text-blue-700 font-bold'
+                        : 'text-slate-600 hover:bg-slate-200/50 hover:text-slate-800'
+                    }`}
+                  >
+                    <FileCode2 className={`w-3.5 h-3.5 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                    <span>{file.name}</span>
+                    {isActive && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-0.5"></div>}
+                  </button>
+                );
+              })}
             </div>
             
-            <div className="flex items-center gap-2">
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-                <Copy className="w-3.5 h-3.5" /> Copy Code
+            {/* Actions */}
+            <div className="flex items-center gap-2 shrink-0 ml-3">
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                  isEditing ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+                title={isEditing ? 'Viewing code mode' : 'Edit code in editor'}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>{isEditing ? 'Editing' : 'Edit'}</span>
               </button>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-                <AlignLeft className="w-3.5 h-3.5" /> Format
-              </button>
-              <div className="w-px h-4 bg-slate-200 mx-1"></div>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
-                <RefreshCw className="w-3.5 h-3.5" /> Regenerate
+              <button
+                onClick={handleCopyCode}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+              >
+                {copied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copied ? 'Copied!' : 'Copy'}</span>
               </button>
             </div>
           </div>
 
-          {}
           {/* Code Area */}
-          <div className="flex-1 overflow-auto flex bg-white text-[13px] font-mono leading-relaxed p-4">
+          <div className="flex-1 overflow-auto flex bg-[#0F172A] text-[13px] font-mono leading-relaxed p-4 relative">
             {/* Line Numbers */}
-            <div className="flex flex-col text-slate-300 select-none pr-4 text-right border-r border-slate-100 h-max">
-              {[...Array(28)].map((_, i) => (
-                <span key={i}>{String(i + 1).padStart(2, '0')}</span>
+            <div className="flex flex-col text-slate-600 select-none pr-4 text-right border-r border-slate-800 h-max min-w-[2.5rem]">
+              {codeLines.map((_, i) => (
+                <span key={i} className="leading-6">{i + 1}</span>
               ))}
             </div>
-            {/* Syntax Highlighted Code */}
-            <div className="pl-4 text-slate-600 whitespace-pre h-max">
-              <div><span className="text-blue-600 font-semibold">import</span> React, {'{'} useState {'}'} <span className="text-blue-600 font-semibold">from</span> <span className="text-emerald-600">'react'</span>;</div>
-              <div><span className="text-blue-600 font-semibold">import</span> {'{'} View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Image {'}'} <span className="text-blue-600 font-semibold">from</span> <span className="text-emerald-600">'react-native'</span>;</div>
-              <div><span className="text-blue-600 font-semibold">import</span> {'{'} Feather, MaterialCommunityIcons {'}'} <span className="text-blue-600 font-semibold">from</span> <span className="text-emerald-600">'@expo/vector-icons'</span>;</div>
-              <br/>
-              <div><span className="text-blue-600 font-semibold">export default function</span> <span className="text-indigo-600 font-semibold">LoginScreen</span>() {'{'}</div>
-              <div>  <span className="text-blue-600 font-semibold">const</span> [email, setEmail] = <span className="text-indigo-500">useState</span>(<span className="text-emerald-600">'guest.paris@lumiere.fr'</span>);</div>
-              <div>  <span className="text-blue-600 font-semibold">const</span> [password, setPassword] = <span className="text-indigo-500">useState</span>(<span className="text-emerald-600">''</span>);</div>
-              <br/>
-              <div>  <span className="text-blue-600 font-semibold">return</span> (</div>
-              <div>    <span className="text-slate-400">&lt;</span><span className="text-indigo-600 font-semibold">SafeAreaView</span> <span className="text-sky-500">style</span>=<span className="text-slate-400">{'{'}</span>styles.<span className="text-slate-700">container</span><span className="text-slate-400">{'}'}&gt;</span></div>
-              
-              <div>      <span className="text-slate-400">&lt;</span><span className="text-indigo-600 font-semibold">View</span> <span className="text-sky-500">style</span>=<span className="text-slate-400">{'{'}</span>styles.<span className="text-slate-700">brandHeader</span><span className="text-slate-400">{'}'}&gt;</span></div>
-              <div>        <span className="text-slate-400">&lt;</span><span className="text-indigo-600 font-semibold">Image</span> <span className="text-sky-500">source</span>=<span className="text-slate-400">{'{'}</span>require(<span className="text-emerald-600">'./assets/logo.png'</span>)<span className="text-slate-400">{'}'}</span> <span className="text-sky-500">style</span>=<span className="text-slate-400">{'{'}</span>styles.<span className="text-slate-700">logo</span><span className="text-slate-400">{'}'} /&gt;</span></div>
-              <div>        <span className="text-slate-400">&lt;</span><span className="text-indigo-600 font-semibold">Text</span> <span className="text-sky-500">style</span>=<span className="text-slate-400">{'{'}</span>styles.<span className="text-slate-700">title</span><span className="text-slate-400">{'}'}&gt;</span>Bistrot Lumière<span className="text-slate-400">&lt;/</span><span className="text-indigo-600 font-semibold">Text</span><span className="text-slate-400">&gt;</span></div>
-              <div>        <span className="text-slate-400">&lt;</span><span className="text-indigo-600 font-semibold">Text</span> <span className="text-sky-500">style</span>=<span className="text-slate-400">{'{'}</span>styles.<span className="text-slate-700">subtitle</span><span className="text-slate-400">{'}'}&gt;</span>Haute Cuisine • Paris 7e<span className="text-slate-400">&lt;/</span><span className="text-indigo-600 font-semibold">Text</span><span className="text-slate-400">&gt;</span></div>
-              <div>      <span className="text-slate-400">&lt;/</span><span className="text-indigo-600 font-semibold">View</span><span className="text-slate-400">&gt;</span></div>
-              <br/>
-              <div>      <span className="text-slate-400">&lt;</span><span className="text-indigo-600 font-semibold">View</span> <span className="text-sky-500">style</span>=<span className="text-slate-400">{'{'}</span>styles.<span className="text-slate-700">formCard</span><span className="text-slate-400">{'}'}&gt;</span></div>
-              <div>        <span className="text-slate-400">&lt;</span><span className="text-indigo-600 font-semibold">TextInput</span> </div>
-              <div>          <span className="text-sky-500">value</span>=<span className="text-slate-400">{'{'}</span>email<span className="text-slate-400">{'}'}</span></div>
-              <div>          <span className="text-sky-500">onChangeText</span>=<span className="text-slate-400">{'{'}</span>setEmail<span className="text-slate-400">{'}'}</span> </div>
-              <div>          <span className="text-sky-500">style</span>=<span className="text-slate-400">{'{'}</span>styles.<span className="text-slate-700">input</span><span className="text-slate-400">{'}'}</span> </div>
-              <div>        <span className="text-slate-400">/&gt;</span></div>
-              <div>        <span className="text-slate-400">&lt;</span><span className="text-indigo-600 font-semibold">TextInput</span> </div>
-              <div>          <span className="text-sky-500">secureTextEntry</span> </div>
-              <div>          <span className="text-sky-500">placeholder</span>=<span className="text-emerald-600">"••••••••"</span> </div>
-              <div>          <span className="text-sky-500">style</span>=<span className="text-slate-400">{'{'}</span>styles.<span className="text-slate-700">input</span><span className="text-slate-400">{'}'}</span></div>
-              <div>        <span className="text-slate-400">/&gt;</span></div>
-              <br/>
-              <div>        <span className="text-slate-400">&lt;</span><span className="text-indigo-600 font-semibold">TouchableOpacity</span> <span className="text-sky-500">style</span>=<span className="text-slate-400">{'{'}</span>styles.<span className="text-slate-700">ctaButton</span><span className="text-slate-400">{'}'}&gt;</span></div>
-              <div>          <span className="text-slate-400">&lt;</span><span className="text-indigo-600 font-semibold">Text</span> <span className="text-sky-500">style</span>=<span className="text-slate-400">{'{'}</span>styles.<span className="text-slate-700">ctaText</span><span className="text-slate-400">{'}'}&gt;</span>Sign In to Table<span className="text-slate-400">&lt;/</span><span className="text-indigo-600 font-semibold">Text</span><span className="text-slate-400">&gt;</span></div>
-              <div>        <span className="text-slate-400">&lt;/</span><span className="text-indigo-600 font-semibold">TouchableOpacity</span><span className="text-slate-400">&gt;</span></div>
-              <div>      <span className="text-slate-400">&lt;/</span><span className="text-indigo-600 font-semibold">View</span><span className="text-slate-400">&gt;</span></div>
-              <div>    <span className="text-slate-400">&lt;/</span><span className="text-indigo-600 font-semibold">SafeAreaView</span><span className="text-slate-400">&gt;</span></div>
-              <div>  );</div>
-              <div>{'}'}</div>
-            </div>
+
+            {/* Editable or Highlighted Code */}
+            {isEditing ? (
+              <textarea
+                value={editableCode}
+                onChange={handleCodeChange}
+                spellCheck={false}
+                className="flex-1 bg-transparent text-emerald-300 font-mono text-[13px] leading-6 pl-4 border-none outline-none resize-none selection:bg-blue-500/30 w-full min-h-full"
+              />
+            ) : (
+              <pre className="pl-4 text-slate-200 whitespace-pre overflow-x-auto leading-6 flex-1 font-mono selection:bg-blue-500/40">
+                <code>{editableCode || selectedFile?.content}</code>
+              </pre>
+            )}
           </div>
 
           {/* Editor Footer */}
-          <div className="h-8 bg-slate-50 border-t border-slate-100 flex items-center justify-between px-4 shrink-0">
+          <div className="h-8 bg-slate-50 border-t border-slate-200 flex items-center justify-between px-4 shrink-0 text-[11px]">
             <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-600">
-                <CheckCircle2 className="w-3.5 h-3.5" /> TypeScript Checked
+              <span className="flex items-center gap-1.5 font-semibold text-emerald-600">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Synthesized AST Validated
               </span>
-              <span className="text-[10px] font-mono text-slate-400">UTF-8</span>
-              <span className="text-[10px] font-mono text-slate-400">Tabs: 2</span>
+              <span className="text-slate-400 font-mono">
+                Framework: {workflowState.framework || 'React Native'}
+              </span>
+              <span className="text-slate-400 font-mono">UTF-8</span>
             </div>
-            <span className="text-[10px] font-mono text-slate-400">Total Lines: 128 (Viewport Preview)</span>
+            <span className="text-slate-500 font-mono">
+              {codeLines.length} lines • {selectedFile?.name || 'File'}
+            </span>
           </div>
         </div>
 
-        {}
-        {/* Right Pane - Live Sandbox */}
+        {/* Right Pane - Live Sandbox / Original Preview */}
         <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden min-w-[450px]">
           
           {/* Sandbox Toolbar */}
-          <div className="h-12 border-b border-slate-100 flex items-center justify-between px-4 bg-slate-50/50 shrink-0">
-            <div className="flex items-center gap-2">
-              <MonitorSmartphone className="w-4 h-4 text-blue-600" />
-              <h2 className="text-sm font-bold text-slate-800">Live Sandbox Preview</h2>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm">
-                <MonitorSmartphone className="w-3.5 h-3.5 text-slate-500" />
-                <span className="text-[11px] font-mono font-medium text-slate-600">iPhone 14 (390 × 844)</span>
-              </div>
-              <div className="flex items-center gap-2 px-2 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm">
-                <span className="text-[11px] font-mono font-medium text-slate-600 px-1">100%</span>
-              </div>
-              <button className="p-1.5 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-slate-600 transition-colors">
-                <RefreshCw className="w-3.5 h-3.5" />
+          <div className="h-12 border-b border-slate-100 flex items-center justify-between px-4 bg-slate-50/70 shrink-0">
+            {/* Switch between Rendered Preview and Original Screenshot */}
+            <div className="flex bg-slate-200/60 p-0.5 rounded-lg border border-slate-200">
+              <button
+                onClick={() => setPreviewTab('device')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                  previewTab === 'device' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <MonitorSmartphone className="w-3.5 h-3.5" /> Rendered UI
+              </button>
+              <button
+                onClick={() => setPreviewTab('original')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                  previewTab === 'original' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5" /> Source Screenshot
               </button>
             </div>
+            
+            {/* Device Frame Mode */}
+            {previewTab === 'device' && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-600">
+                  <Smartphone className="w-3 h-3 text-slate-400" />
+                  <span>390 × 844</span>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Device Mockup Area */}
-          <div className="flex-1 bg-[#F8FAFC] flex items-center justify-center p-8 overflow-y-auto relative">
-            
-            {/* Soft background glow */}
+          {/* Preview Canvas Area */}
+          <div className="flex-1 bg-[#F8FAFC] flex items-center justify-center p-6 overflow-y-auto relative">
+            {/* Background Glow */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-               <div className="w-[300px] h-[600px] bg-blue-500/5 blur-[100px] rounded-full"></div>
+              <div className="w-[300px] h-[550px] bg-blue-500/5 blur-[90px] rounded-full"></div>
             </div>
 
-            {/* iPhone Frame */}
-            <div className="w-[350px] h-[720px] bg-[#0A0F1C] rounded-[3.5rem] border-[12px] border-[#18181B] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col shrink-0 ring-1 ring-white/10">
-              
-              {/* Dynamic Island Notch */}
-              <div className="absolute top-2 inset-x-0 mx-auto w-[110px] h-[30px] bg-black rounded-full z-20 flex items-center justify-between px-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#1A1A1A] ring-1 ring-white/10"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-[#0a0a0a] ring-1 ring-white/5 relative overflow-hidden">
-                   <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[1px]"></div>
-                </div>
-              </div>
-
-              {/* Status Bar */}
-              <div className="flex items-center justify-between px-6 pt-3.5 pb-2 text-white z-10 text-[11px] font-semibold tracking-wide bg-gradient-to-b from-black/50 to-transparent">
-                <span>9:41</span>
-                <div className="flex items-center gap-1.5">
-                  <Wifi className="w-3.5 h-3.5" />
-                  <BatteryMedium className="w-4 h-4" />
-                </div>
-              </div>
-
-              {}
-              {/* App UI - Dark Mode Theme */}
-              <div className="flex-1 flex flex-col px-6 pt-6 pb-8 overflow-y-auto custom-scrollbar">
-                
-                {/* Header Image & Titles */}
-                <div className="flex flex-col items-center mt-2 mb-8 animate-fade-in-up">
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4 ring-2 ring-white/10 shadow-xl shadow-black/50">
-                    <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=150&q=80" alt="Restaurant Interior" className="w-full h-full object-cover" />
+            {previewTab === 'original' ? (
+              /* Original Screenshot View */
+              <div className="max-w-[420px] max-h-[680px] bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden p-2 flex flex-col items-center justify-center">
+                {workflowState.screenshotUrl ? (
+                  <img
+                    src={workflowState.screenshotUrl}
+                    alt="Original Uploaded UI"
+                    className="w-full h-full object-contain rounded-xl"
+                  />
+                ) : (
+                  <div className="p-12 text-center text-slate-400">
+                    <ImageIcon className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                    <p className="text-xs">No screenshot uploaded yet.</p>
                   </div>
-                  <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                    🍽️ Bistrot Lumière
-                  </h1>
-                  <p className="text-[#94A3B8] text-[11px] mt-1 font-medium tracking-wide">
-                    Haute Cuisine • Paris 7e Arrondissement
-                  </p>
-                  
-                  <div className="mt-4 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Table Reservation & VIP Lounge</span>
+                )}
+              </div>
+            ) : (
+              /* Interactive Device Frame */
+              <div
+                className="w-[340px] h-[680px] rounded-[3rem] border-[10px] border-[#18181B] shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden flex flex-col shrink-0 ring-1 ring-white/10"
+                style={{ backgroundColor: palette.background }}
+              >
+                {/* Dynamic Island Notch */}
+                <div className="absolute top-2 inset-x-0 mx-auto w-[100px] h-[26px] bg-black rounded-full z-20 flex items-center justify-between px-3">
+                  <div className="w-2 h-2 rounded-full bg-[#222]"></div>
+                  <div className="w-2 h-2 rounded-full bg-blue-900/40"></div>
+                </div>
+
+                {/* Status Bar */}
+                <div className="flex items-center justify-between px-6 pt-3 pb-2 text-[10px] font-semibold tracking-wide z-10" style={{ color: palette.textSecondary }}>
+                  <span>9:41</span>
+                  <div className="flex items-center gap-1.5">
+                    <Wifi className="w-3 h-3" />
+                    <BatteryMedium className="w-3.5 h-3.5" />
                   </div>
                 </div>
 
-                {/* Main Form Content */}
-                <div className="flex flex-col flex-1">
-                  <h2 className="text-2xl font-bold text-white mb-1">Welcome Back</h2>
-                  <p className="text-[#94A3B8] text-xs mb-8">
-                    Sign in to manage your bookings and sommelier menu
-                  </p>
-
-                  <div className="flex flex-col gap-5">
-                    {/* Input Group 1 */}
-                    <div>
-                      <label className="text-[9px] font-bold text-[#64748B] uppercase tracking-wider ml-1 mb-1.5 block">Reservation ID or Email</label>
-                      <div className="bg-[#1E293B] border border-white/5 rounded-xl px-4 py-3.5 flex items-center gap-3 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/50 transition-all shadow-inner">
-                        <Mail className="w-4 h-4 text-[#64748B]" />
-                        <input 
-                          type="text" 
-                          value="guest.paris@lumiere.fr" 
-                          readOnly
-                          className="bg-transparent border-none outline-none text-sm text-white flex-1 font-medium"
-                        />
-                      </div>
+                {/* Dynamic App UI Content */}
+                <div className="flex-1 flex flex-col px-5 pt-4 pb-6 overflow-y-auto custom-scrollbar">
+                  {/* Header / Brand */}
+                  <div className="flex flex-col items-center mb-6 mt-2">
+                    <div
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3 shadow-md"
+                      style={{ backgroundColor: palette.primary }}
+                    >
+                      <Zap className="w-7 h-7 text-white" />
                     </div>
-
-                    {/* Input Group 2 */}
-                    <div>
-                      <div className="flex items-center justify-between ml-1 mb-1.5 block">
-                         <label className="text-[9px] font-bold text-[#64748B] uppercase tracking-wider">Concierge Passcode</label>
-                         <span className="text-[10px] font-semibold text-cyan-400 cursor-pointer hover:text-cyan-300">Forgot?</span>
-                      </div>
-                      <div className="bg-[#1E293B] border border-white/5 rounded-xl px-4 py-3.5 flex items-center gap-3 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/50 transition-all shadow-inner">
-                        <Lock className="w-4 h-4 text-[#64748B]" />
-                        <input 
-                          type="password" 
-                          value="secretVIPpass" 
-                          readOnly
-                          className="bg-transparent border-none outline-none text-sm text-white flex-1 font-medium"
-                        />
-                        <EyeOff className="w-4 h-4 text-[#64748B] cursor-pointer hover:text-white transition-colors" />
-                      </div>
-                    </div>
+                    <h2 className="text-lg font-bold" style={{ color: palette.textPrimary }}>
+                      {ir?.screenName || workflowState.projectName || 'Synthesized UI'}
+                    </h2>
+                    <p className="text-[11px] mt-0.5" style={{ color: palette.textSecondary }}>
+                      {workflowState.framework?.toUpperCase()} • Clean Component Tree
+                    </p>
                   </div>
 
-                  {/* Spacer to push buttons down */}
-                  <div className="flex-1 min-h-[2rem]"></div>
+                  {/* Components Container */}
+                  <div className="flex flex-col gap-3.5 flex-1">
+                    {/* Render components derived from IR or structured cards */}
+                    {ir?.components && ir.components.length > 0 ? (
+                      ir.components.slice(0, 5).map((comp, idx) => (
+                        <div
+                          key={comp.id || idx}
+                          className="p-3.5 rounded-xl border border-white/5 transition-all"
+                          style={{
+                            backgroundColor: comp.style?.backgroundColor || '#1E293B',
+                            borderRadius: comp.style?.borderRadius || 12,
+                          }}
+                        >
+                          <span className="text-[10px] font-mono uppercase tracking-wider block opacity-70 mb-1" style={{ color: palette.textSecondary }}>
+                            {comp.type} • {comp.label || 'Component'}
+                          </span>
+                          {comp.type === 'button' ? (
+                            <button
+                              className="w-full py-2.5 rounded-lg font-semibold text-xs text-white shadow-sm transition-transform active:scale-95"
+                              style={{ backgroundColor: palette.primary }}
+                            >
+                              {comp.label || 'Action Button'}
+                            </button>
+                          ) : comp.type === 'input' ? (
+                            <input
+                              type="text"
+                              readOnly
+                              value={comp.placeholder || 'Input field...'}
+                              className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs outline-none"
+                              style={{ color: palette.textPrimary }}
+                            />
+                          ) : (
+                            <p className="text-xs font-medium" style={{ color: comp.style?.textColor || palette.textPrimary }}>
+                              {comp.label}
+                            </p>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        <div className="bg-[#1E293B] border border-white/5 rounded-xl p-3.5">
+                          <label className="text-[9px] font-bold text-[#64748B] uppercase tracking-wider block mb-1">
+                            Email Address
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value="alex@developer.io"
+                            className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                          />
+                        </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col gap-3 mt-auto">
-                    <button className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all">
-                      Sign In to Table <ArrowRight className="w-4 h-4" />
-                    </button>
-                    <button className="w-full bg-[#1E293B] hover:bg-[#2A374E] text-white font-medium py-3.5 rounded-xl flex items-center justify-center gap-2 border border-white/5 transition-all">
-                      <Fingerprint className="w-4 h-4 text-cyan-400" /> Use FaceID / Biometric
-                    </button>
+                        <div className="bg-[#1E293B] border border-white/5 rounded-xl p-3.5">
+                          <label className="text-[9px] font-bold text-[#64748B] uppercase tracking-wider block mb-1">
+                            Password
+                          </label>
+                          <input
+                            type="password"
+                            readOnly
+                            value="••••••••••••"
+                            className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                          />
+                        </div>
+
+                        <button
+                          className="w-full py-3 rounded-xl font-bold text-xs text-white shadow-lg mt-auto"
+                          style={{ backgroundColor: palette.primary }}
+                        >
+                          Continue to App
+                        </button>
+                      </>
+                    )}
                   </div>
-                  
-                  <div className="text-center mt-6 mb-2">
-                    <span className="text-[9px] text-[#475569] font-medium tracking-wide">
-                      Protected by Michelin Luxe Concierge SDK
-                    </span>
-                  </div>
-                  
-                  {/* Home Indicator line */}
-                  <div className="w-1/3 h-1 bg-white/20 rounded-full mx-auto mt-2"></div>
-                  
+
+                  {/* Home Indicator */}
+                  <div className="w-1/3 h-1 bg-white/20 rounded-full mx-auto mt-4"></div>
                 </div>
               </div>
-            </div>
+            )}
 
           </div>
         </div>
       </main>
 
-      {}
       {/* Bottom Action Bar */}
       <footer className="h-20 bg-white border-t border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
         <Link to="/analysis" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors border border-slate-200">
@@ -336,7 +626,10 @@ export default function App() {
             <Sparkles className="w-4 h-4" /> Refine with AI
           </Link>
           
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm">
+          <button
+            onClick={handleDownloadZip}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm"
+          >
             <Download className="w-4 h-4" /> Download ZIP
           </button>
           
@@ -346,21 +639,12 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Extra CSS for custom scrollbar in the device mockup */}
+      {/* Custom scrollbar styling */}
       <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.2);
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.45); }
       `}} />
     </div>
   );
