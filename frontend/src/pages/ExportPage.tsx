@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Check,
   ChevronRight,
@@ -10,28 +10,84 @@ import {
   Layers,
   Code2,
   ShieldCheck,
-  Image as ImageIcon,
   Activity,
-  AlertCircle,
-  RefreshCw,
   Folder,
   FileCode2,
   FileJson,
-  FileImage,
   Terminal,
-  FileText
+  CheckCheck
 } from 'lucide-react';
 
 import { useWorkflow } from '../hooks/useWorkflow';
+import type { CodeFile } from '../services/generationService';
 
-export default function App() {
-  const { state: workflowState } = useWorkflow();
+export default function ExportPage() {
+  const navigate = useNavigate();
+  const { state: workflowState, resetWorkflow } = useWorkflow();
+
   const generationId = workflowState.generationId || 'demo_gen';
   const downloadUrl = `/api/download/${generationId}.zip`;
+
+  const fallbackFiles: CodeFile[] = [
+    {
+      path: 'screens/MainScreen.tsx',
+      name: 'MainScreen.tsx',
+      type: 'tsx',
+      sizeBytes: 2450,
+      content: `// UIForge AI - Generated Screen Component\nimport React from 'react';\nimport { View, Text, StyleSheet } from 'react-native';\nimport { theme } from '../styles/theme';\n\nexport default function MainScreen() {\n  return (\n    <View style={styles.container}>\n      <Text style={styles.title}>Welcome</Text>\n    </View>\n  );\n}\n\nconst styles = StyleSheet.create({\n  container: { flex: 1, backgroundColor: theme.colors.background },\n  title: { fontSize: 24, color: theme.colors.textPrimary },\n});`
+    },
+    {
+      path: 'styles/theme.ts',
+      name: 'theme.ts',
+      type: 'ts',
+      sizeBytes: 850,
+      content: `export const theme = {\n  colors: {\n    primary: '#2563EB',\n    secondary: '#10B981',\n    background: '#0F172A',\n    textPrimary: '#FFFFFF',\n    textSecondary: '#94A3B8',\n  },\n};`
+    },
+    {
+      path: 'package.json',
+      name: 'package.json',
+      type: 'json',
+      sizeBytes: 520,
+      content: `{\n  "name": "uiforge-generated-app",\n  "version": "1.0.0",\n  "private": true\n}`
+    }
+  ];
+
+  const files: CodeFile[] = workflowState.generatedFiles?.length
+    ? workflowState.generatedFiles
+    : fallbackFiles;
+
+  const [selectedFilePath, setSelectedFilePath] = useState<string>(files[0]?.path || '');
+  const [copiedSnippet, setCopiedSnippet] = useState<boolean>(false);
+  const [copiedAll, setCopiedAll] = useState<boolean>(false);
+
+  const selectedFile = files.find((f) => f.path === selectedFilePath) || files[0];
 
   const handleDownload = () => {
     window.open(downloadUrl, '_blank');
   };
+
+  const handleCopySnippet = async () => {
+    if (selectedFile) {
+      await navigator.clipboard.writeText(selectedFile.content);
+      setCopiedSnippet(true);
+      setTimeout(() => setCopiedSnippet(false), 2000);
+    }
+  };
+
+  const handleCopyAll = async () => {
+    const allCode = files.map((f) => `// ================= ${f.path} =================\n${f.content}\n`).join('\n\n');
+    await navigator.clipboard.writeText(allCode);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 2000);
+  };
+
+  const handleReset = () => {
+    if (window.confirm('Reset this workflow and start a new project?')) {
+      resetWorkflow();
+      navigate('/upload');
+    }
+  };
+
   const steps = [
     { id: 1, label: 'Upload', state: 'completed' },
     { id: 2, label: 'Analyze', state: 'completed' },
@@ -41,6 +97,9 @@ export default function App() {
     { id: 6, label: 'Refine', state: 'completed' },
     { id: 7, label: 'Export', state: 'active' },
   ];
+
+  const frameworkName = workflowState.framework?.toUpperCase() || 'REACT NATIVE';
+  const projectName = workflowState.projectName || 'uiforge-app';
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col overflow-hidden selection:bg-blue-100 pb-12">
@@ -79,7 +138,10 @@ export default function App() {
 
         {/* Reset Button */}
         <div className="w-48 flex justify-end">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm bg-white">
+          <button
+            onClick={handleReset}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm bg-white"
+          >
             <RotateCcw className="w-3.5 h-3.5 text-red-500" strokeWidth={2.5} />
             Reset / Start New
           </button>
@@ -92,7 +154,7 @@ export default function App() {
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-               <CheckCircle2 className="w-6 h-6 text-blue-600" />
+              <CheckCircle2 className="w-6 h-6 text-blue-600" />
             </div>
           </div>
           
@@ -100,7 +162,7 @@ export default function App() {
             <span role="img" aria-label="party popper" className="text-2xl">🎉</span> Your UI is Ready to Ship
           </h1>
           <p className="text-slate-500 max-w-lg mx-auto mb-8 leading-relaxed">
-            Your generated React Native code bundle is fully compiled, linted, and ready for your production repository.
+            Your generated {frameworkName} code bundle is fully synthesized, refined, and packaged ready for your project.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -112,9 +174,12 @@ export default function App() {
               Download ZIP Bundle
               <span className="bg-blue-800/50 text-blue-100 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ml-1 font-semibold">.zip</span>
             </button>
-            <button className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-6 py-3.5 rounded-xl font-bold shadow-sm transition-all">
-              <Copy className="w-5 h-5 text-slate-400" />
-              Copy All Code
+            <button
+              onClick={handleCopyAll}
+              className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-6 py-3.5 rounded-xl font-bold shadow-sm transition-all cursor-pointer"
+            >
+              {copiedAll ? <CheckCheck className="w-5 h-5 text-emerald-600" /> : <Copy className="w-5 h-5 text-slate-400" />}
+              <span>{copiedAll ? 'All Code Copied!' : 'Copy All Code'}</span>
             </button>
           </div>
         </div>
@@ -136,270 +201,136 @@ export default function App() {
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
                     <Code2 className="w-4 h-4 text-slate-400" /> Framework
                   </div>
-                  <span className="text-sm font-mono text-slate-500">React Native</span>
+                  <span className="text-sm font-mono text-slate-700 font-semibold">{frameworkName}</span>
                 </div>
                 <div className="flex items-center justify-between py-3 border-b border-slate-100">
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <div className="w-4 h-4 flex items-center justify-center rounded bg-emerald-100">
-                       <span className="text-[10px] font-bold text-emerald-600">S</span>
-                    </div>
-                    Styling Engine
+                    <ShieldCheck className="w-4 h-4 text-slate-400" /> Code Quality
                   </div>
-                  <span className="text-sm font-mono text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded">StyleSheet.create</span>
-                </div>
-                <div className="flex items-center justify-between py-3 border-b border-slate-100">
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <ShieldCheck className="w-4 h-4 text-blue-500" /> Type Safety
-                  </div>
-                  <span className="text-sm font-mono text-blue-600 font-semibold">TypeScript (Strict)</span>
+                  <span className="text-sm font-semibold text-emerald-600">Verified Strict</span>
                 </div>
                 <div className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <ImageIcon className="w-4 h-4 text-slate-400" /> Asset Scale
+                    <Activity className="w-4 h-4 text-slate-400" /> Total Files
                   </div>
-                  <span className="text-sm font-mono text-slate-500">@2x, @3x SVGs</span>
+                  <span className="text-sm font-mono text-slate-500">{files.length} source files</span>
                 </div>
               </div>
             </div>
 
-            {/* Bundle Quality Card */}
+            {/* Quick Unpack & Run Commands Card */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-5">
-                <Activity className="w-3.5 h-3.5 text-emerald-500" /> Bundle Quality Metrology
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
+                <Terminal className="w-4 h-4 text-blue-600" /> Quick Unpack & Run
               </h3>
-
-              <div className="flex flex-col gap-5">
-                <div>
-                  <div className="flex justify-between items-end mb-2 text-xs font-mono">
-                    <span className="text-slate-500">AST Component Depth:</span>
-                    <span className="font-bold text-slate-900">4 levels</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: '60%' }}></div>
-                  </div>
+              
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 font-mono text-xs leading-loose overflow-x-auto">
+                <div className="flex">
+                  <span className="text-slate-400 mr-2 select-none">&gt;</span>
+                  <span className="text-slate-700">mkdir {projectName} && cd {projectName}</span>
                 </div>
-
-                <div>
-                  <div className="flex justify-between items-end mb-2 text-xs font-mono">
-                    <span className="text-slate-500">StyleSheet Deduplication:</span>
-                    <span className="font-bold text-slate-900">96.4%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-600 rounded-full" style={{ width: '96.4%' }}></div>
-                  </div>
+                <div className="flex">
+                  <span className="text-slate-400 mr-2 select-none">&gt;</span>
+                  <span className="text-slate-700">unzip ~/Downloads/uiforge_export.zip -d .</span>
                 </div>
-
-                <div>
-                  <div className="flex justify-between items-end mb-2 text-xs font-mono">
-                    <span className="text-slate-500">Accessibility Attributes (A11y):</span>
-                    <span className="font-bold text-slate-900">100% compliant</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-600 rounded-full" style={{ width: '100%' }}></div>
-                  </div>
+                <div className="flex">
+                  <span className="text-slate-400 mr-2 select-none">&gt;</span>
+                  <span className="text-blue-700 font-semibold">
+                    {workflowState.framework === 'react-native'
+                      ? 'npm install && npx expo start'
+                      : workflowState.framework === 'flutter'
+                      ? 'flutter pub get && flutter run'
+                      : 'npm install && npm run dev'}
+                  </span>
                 </div>
               </div>
-            </div>
-
-            {/* Ephemeral Notice Card */}
-            <div className="bg-red-50 rounded-2xl border border-red-100 shadow-sm p-6">
-               <h3 className="text-sm font-bold text-red-700 flex items-center gap-2 mb-3">
-                 <AlertCircle className="w-4 h-4" /> Ephemeral Session Notice
-               </h3>
-               <p className="text-xs text-red-800/80 leading-relaxed mb-4">
-                 This zero-auth session does not persist in the cloud. To keep your work secure, download the package now before closing or resetting your workspace.
-               </p>
-               <button className="w-full bg-red-100/50 hover:bg-red-100 border border-red-200 text-red-700 font-semibold text-xs py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                 <RefreshCw className="w-3.5 h-3.5" /> Start New Project (Reset Workspace)
-               </button>
             </div>
 
           </div>
 
-          {/* Right Column (2/3) */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            
-            {/* Archive Manifest Card */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden h-[540px]">
+          {/* Right Column (2/3) - File Tree & Interactive Viewer */}
+          <div className="lg:col-span-2 flex flex-col">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px] overflow-hidden">
               
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
-                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-blue-600" /> Generated Archive Manifest
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded">8 files</span>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded uppercase tracking-wider">Ready to unpack</span>
-                </div>
+              <div className="h-12 border-b border-slate-100 flex items-center justify-between px-6 bg-slate-50/50 shrink-0">
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Generated Project Bundle ({files.length} Files)
+                </span>
+                <span className="text-xs font-mono text-slate-400">
+                  {selectedFile?.name || 'File Preview'}
+                </span>
               </div>
 
-              {/* Split Content */}
               <div className="flex-1 flex overflow-hidden">
-                
-                {/* File Tree (Left Pane) */}
-                <div className="w-64 border-r border-slate-100 bg-slate-50/30 overflow-y-auto p-4 flex flex-col font-mono text-xs">
-                  <div className="text-[10px] font-bold text-slate-400 mb-3 ml-2">PROJECT FILE TREE</div>
+                {/* File Tree Left Bar */}
+                <div className="w-56 border-r border-slate-100 bg-slate-50/40 overflow-y-auto p-3 flex flex-col font-mono text-xs custom-scrollbar">
+                  <div className="text-[10px] font-bold text-slate-400 mb-2 ml-1">SOURCE BUNDLE</div>
                   
-                  <div className="flex items-center gap-2 text-slate-700 py-1 font-medium">
-                    <Folder className="w-4 h-4 text-blue-400 fill-blue-100" /> restaurant-mobile-ui/
+                  <div className="flex items-center gap-2 text-slate-700 py-1 font-semibold truncate">
+                    <Folder className="w-4 h-4 text-blue-500 fill-blue-100 shrink-0" />
+                    <span className="truncate">{projectName}</span>
                   </div>
                   
-                  <div className="ml-4 border-l border-slate-200 pl-2 flex flex-col">
-                    <div className="flex items-center gap-2 text-slate-600 py-1.5 mt-1">
-                      <Folder className="w-4 h-4 text-slate-400 fill-slate-100" /> components/
-                    </div>
-                    <div className="ml-4 flex flex-col">
-                       <div className="flex items-center justify-between bg-blue-50 text-blue-700 border border-blue-100 rounded py-1 px-2 -ml-2 mb-1 cursor-pointer">
-                         <div className="flex items-center gap-2">
-                           <FileCode2 className="w-3.5 h-3.5 text-blue-500" /> LoginCard.tsx
-                         </div>
-                         <span className="text-[9px] text-blue-400">1.8 KB</span>
-                       </div>
-                       <div className="flex items-center justify-between text-slate-500 hover:bg-slate-100 rounded py-1 px-2 -ml-2 cursor-pointer transition-colors">
-                         <div className="flex items-center gap-2">
-                           <FileCode2 className="w-3.5 h-3.5" /> SocialButtons.tsx
-                         </div>
-                         <span className="text-[9px] text-slate-400">940 B</span>
-                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-slate-600 py-1.5 mt-2">
-                      <Folder className="w-4 h-4 text-slate-400 fill-slate-100" /> styles/
-                    </div>
-                    <div className="ml-4 flex flex-col">
-                       <div className="flex items-center justify-between text-slate-500 hover:bg-slate-100 rounded py-1 px-2 -ml-2 cursor-pointer transition-colors">
-                         <div className="flex items-center gap-2">
-                           <FileCode2 className="w-3.5 h-3.5" /> theme.ts
-                         </div>
-                         <span className="text-[9px] text-slate-400">1.2 KB</span>
-                       </div>
-                       <div className="flex items-center justify-between text-slate-500 hover:bg-slate-100 rounded py-1 px-2 -ml-2 cursor-pointer transition-colors">
-                         <div className="flex items-center gap-2">
-                           <FileJson className="w-3.5 h-3.5 text-amber-500" /> tokens.json
-                         </div>
-                         <span className="text-[9px] text-slate-400">3.4 KB</span>
-                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-slate-600 py-1.5 mt-2">
-                      <Folder className="w-4 h-4 text-slate-400 fill-slate-100" /> assets/
-                    </div>
-                    <div className="ml-4 flex flex-col">
-                       <div className="flex items-center justify-between text-slate-500 hover:bg-slate-100 rounded py-1 px-2 -ml-2 cursor-pointer transition-colors">
-                         <div className="flex items-center gap-2">
-                           <FileImage className="w-3.5 h-3.5 text-purple-500" /> logo.png
-                         </div>
-                         <span className="text-[9px] text-slate-400">12 KB</span>
-                       </div>
-                       <div className="flex items-center justify-between text-slate-500 hover:bg-slate-100 rounded py-1 px-2 -ml-2 cursor-pointer transition-colors">
-                         <div className="flex items-center gap-2">
-                           <FileImage className="w-3.5 h-3.5 text-purple-500" /> icons.svg
-                         </div>
-                         <span className="text-[9px] text-slate-400">8.1 KB</span>
-                       </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-slate-600 hover:bg-slate-100 rounded py-1.5 px-2 -ml-2 mt-2 cursor-pointer transition-colors">
-                      <div className="flex items-center gap-2">
-                        <FileCode2 className="w-3.5 h-3.5 text-blue-500" /> App.tsx
-                      </div>
-                      <span className="text-[9px] text-slate-400">2.1 KB</span>
-                    </div>
+                  <div className="ml-3 border-l border-slate-200 pl-2 flex flex-col gap-1 mt-1">
+                    {files.map((file) => {
+                      const isActive = file.path === selectedFile?.path;
+                      return (
+                        <button
+                          key={file.path}
+                          onClick={() => setSelectedFilePath(file.path)}
+                          className={`flex items-center justify-between text-left py-1.5 px-2 rounded transition-colors ${
+                            isActive
+                              ? 'bg-blue-50 text-blue-700 font-bold border border-blue-100'
+                              : 'text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            {file.name.endsWith('.json') ? (
+                              <FileJson className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            ) : (
+                              <FileCode2 className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                            )}
+                            <span className="truncate">{file.name}</span>
+                          </div>
+                          <span className="text-[9px] text-slate-400 ml-1 shrink-0 font-mono">
+                            {Math.round(file.sizeBytes / 1024) || 1}KB
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Code Viewer (Right Pane) */}
+                {/* Code Viewer Right Pane */}
                 <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
-                  
                   {/* File Header Tab */}
-                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-mono text-blue-600 font-medium">components/LoginCard.tsx</span>
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">TSX Component</span>
+                  <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-slate-50">
+                    <div className="flex items-center gap-2">
+                      <FileCode2 className="w-3.5 h-3.5 text-blue-600" />
+                      <span className="text-xs font-mono text-blue-700 font-semibold">{selectedFile?.path}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-emerald-600 font-semibold">
-                      <Check className="w-3.5 h-3.5" /> Valid
-                    </div>
+                    <button
+                      onClick={handleCopySnippet}
+                      className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-blue-600 transition-colors"
+                    >
+                      {copiedSnippet ? <CheckCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedSnippet ? 'Copied' : 'Copy'}</span>
+                    </button>
                   </div>
 
                   {/* Code Area */}
-                  <div className="flex-1 overflow-auto p-4 text-[13px] font-mono leading-relaxed bg-[#FAFAFA]">
-                    <div className="text-slate-400 italic mb-2">// Synthesized by DesignFlow AI Engine v3.2</div>
-                    <div>
-                      <span className="text-blue-600 font-medium">import</span> <span className="text-slate-700">React, {'{'} useState {'}'}</span> <span className="text-blue-600 font-medium">from</span> <span className="text-emerald-600">'react'</span><span className="text-slate-500">;</span>
-                    </div>
-                    <div>
-                      <span className="text-blue-600 font-medium">import</span> <span className="text-slate-700">{'{'} View, Text, TextInput, TouchableOpacity, StyleSheet {'}'}</span> <span className="text-blue-600 font-medium">from</span> <span className="text-emerald-600">'react-native'</span><span className="text-slate-500">;</span>
-                    </div>
-                    <div className="mb-4">
-                      <span className="text-blue-600 font-medium">import</span> <span className="text-slate-700">{'{'} theme {'}'}</span> <span className="text-blue-600 font-medium">from</span> <span className="text-emerald-600">'../styles/theme'</span><span className="text-slate-500">;</span>
-                    </div>
-
-                    <div>
-                      <span className="text-blue-600 font-medium">export const</span> <span className="text-indigo-600 font-semibold">LoginCard</span><span className="text-slate-700">: React.FC = () {'=>'} {'{'}</span>
-                    </div>
-                    <div className="ml-4">
-                      <span className="text-blue-600 font-medium">const</span> <span className="text-slate-700">[email, setEmail] = useState(</span><span className="text-emerald-600">''</span><span className="text-slate-700">)</span><span className="text-slate-500">;</span>
-                    </div>
-                    <div className="ml-4 text-slate-700">return (</div>
-                    <div className="ml-8">
-                      <span className="text-slate-700">{'<'}</span><span className="text-teal-600 font-medium">View</span> <span className="text-sky-600">style</span><span className="text-slate-700">={'{'}styles.cardContainer{'}'}{'>'}</span>
-                    </div>
-                    <div className="ml-12">
-                      <span className="text-slate-700">{'<'}</span><span className="text-teal-600 font-medium">Text</span> <span className="text-sky-600">style</span><span className="text-slate-700">={'{'}styles.title{'}'}{'>'}</span>Order Delicious Food<span className="text-slate-700">{'</'}</span><span className="text-teal-600 font-medium">Text</span><span className="text-slate-700">{'>'}</span>
-                    </div>
-                    <div className="ml-12">
-                      <span className="text-slate-700">{'<'}</span><span className="text-teal-600 font-medium">TextInput</span>
-                    </div>
-                    <div className="ml-16">
-                      <span className="text-sky-600">style</span><span className="text-slate-700">={'{'}styles.input{'}'}</span>
-                    </div>
-                    <div className="ml-16 mb-1">
-                      <span className="text-sky-600">placeholder</span><span className="text-slate-700">=</span><span className="text-emerald-600">"your.email@bistro.io"</span>
-                    </div>
-                    <div className="ml-12 text-slate-700">{'/>'}</div>
-                    <div className="ml-8">
-                      <span className="text-slate-700">{'</'}</span><span className="text-teal-600 font-medium">View</span><span className="text-slate-700">{'>'}</span>
-                    </div>
-                    <div className="ml-4 text-slate-700">);</div>
-                    <div className="text-slate-700">{'};'}</div>
-                  </div>
-
-                  {/* Code Footer */}
-                  <div className="h-10 bg-white border-t border-slate-100 flex items-center justify-between px-4 shrink-0 absolute bottom-0 left-0 right-0">
-                    <span className="text-[10px] text-slate-400 font-medium">Formatted via Prettier & ESLint</span>
-                    <button className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors">
-                      <Copy className="w-3 h-3" /> Copy snippet
-                    </button>
+                  <div className="flex-1 overflow-auto p-4 text-[13px] font-mono leading-relaxed bg-[#0F172A] text-slate-200">
+                    <pre className="whitespace-pre overflow-x-auto selection:bg-blue-500/40">
+                      <code>{selectedFile?.content}</code>
+                    </pre>
                   </div>
                 </div>
 
               </div>
             </div>
-
-            {/* Run Commands Card */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
-                 <Terminal className="w-4 h-4 text-blue-600" /> Quick Unpack & Run Commands
-               </h3>
-               
-               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 font-mono text-sm leading-loose">
-                  <div className="flex">
-                    <span className="text-slate-400 mr-3 select-none">{'>'}</span>
-                    <span className="text-slate-700">mkdir restaurant-app && cd restaurant-app</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-400 mr-3 select-none">{'>'}</span>
-                    <span className="text-slate-700">unzip ~/Downloads/restaurant-mobile-ui.zip -d .</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-400 mr-3 select-none">{'>'}</span>
-                    <span className="text-slate-700 font-semibold">npm install && npx react-native run-ios</span>
-                  </div>
-               </div>
-            </div>
-
           </div>
+
         </div>
       </main>
 
