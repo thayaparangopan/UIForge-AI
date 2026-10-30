@@ -171,6 +171,26 @@ export default function UploadAndConfigure() {
     }
   };
 
+  const handleLoadSample = async (samplePath: string, sampleName: string) => {
+    setErrorMessage(null);
+    setIsUploading(true);
+    try {
+      const response = await fetch(samplePath);
+      if (!response.ok) {
+        throw new Error('Failed to load sample image.');
+      }
+      const blob = await response.blob();
+      const file = new File([blob], sampleName, { type: 'image/png' });
+      await handleFileUpload(file);
+    } catch (err: unknown) {
+      console.error('Failed to load sample image:', err);
+      const message = err instanceof Error ? err.message : 'Failed to load sample image.';
+      setErrorMessage(message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleReset = () => {
     localStorage.removeItem('activeProjectId');
     navigate('/create');
@@ -322,6 +342,58 @@ export default function UploadAndConfigure() {
                   <RotateCcw className="w-4 h-4 text-blue-400" />
                   Max 15MB
                 </span>
+              </div>
+            </div>
+
+            {/* Quick-Start Demo Samples */}
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  Or Try With 1-Click Sample UIs
+                </span>
+                <span className="text-[11px] text-slate-400">Instant test</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleLoadSample('/samples/mobile-login.png', 'mobile-login.png')}
+                  className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-blue-50 hover:border-blue-300 transition-all text-left group cursor-pointer"
+                >
+                  <img
+                    src="/samples/mobile-login.png"
+                    alt="Mobile Login Sample"
+                    className="w-12 h-14 object-cover rounded-lg border border-slate-200 shadow-xs group-hover:scale-105 transition-transform shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700 truncate">
+                      Mobile Login Screen
+                    </h4>
+                    <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                      390×844 • Dark Theme
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleLoadSample('/samples/saas-dashboard.png', 'saas-dashboard.png')}
+                  className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-blue-50 hover:border-blue-300 transition-all text-left group cursor-pointer"
+                >
+                  <img
+                    src="/samples/saas-dashboard.png"
+                    alt="SaaS Dashboard Sample"
+                    className="w-12 h-14 object-cover rounded-lg border border-slate-200 shadow-xs group-hover:scale-105 transition-transform shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700 truncate">
+                      SaaS Dashboard
+                    </h4>
+                    <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                      720×480 • Analytics Cards
+                    </p>
+                  </div>
+                </button>
               </div>
             </div>
           </div>

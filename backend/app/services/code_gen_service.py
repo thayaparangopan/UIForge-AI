@@ -322,8 +322,8 @@ def generate_code_from_ir(
         "compilationStatus": "success",
     }
 
-    if not api_key:
-        logger.warning("GEMINI_API_KEY is not set. Generating code using local template synthesizer.")
+    if os.getenv("TESTING") == "1" or not api_key:
+        logger.warning("TESTING mode or GEMINI_API_KEY is not set. Generating code using local template synthesizer.")
         fallback = _generate_fallback_code(intermediate_representation, framework)
         result_files = fallback["files"]
         metrics = fallback["metrics"]
