@@ -19,7 +19,7 @@ $backendJob = Start-Job -ScriptBlock {
     & $pyPath -m uvicorn app.main:app --app-dir backend --reload --port 8000
 } -ArgumentList $PSScriptRoot, $VENV_PYTHON
 
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 3
 
 Write-Host "[2/2] Launching Vite Frontend on http://localhost:5173..." -ForegroundColor Green
 Set-Location (Join-Path $PSScriptRoot "frontend")
