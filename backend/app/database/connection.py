@@ -8,19 +8,30 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 logger = logging.getLogger(__name__)
-load_dotenv()
+
+# Only load .env if not explicitly running tests
+if os.getenv("TESTING") != "1":
+    load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./uiforge.db")
+
+# In testing mode, default to SQLite in-memory unless specified
+if os.getenv("TESTING") == "1" and not os.getenv("DATABASE_URL"):
+    DATABASE_URL = "sqlite:///:memory:"
 
 # Fix dialect for psycopg2 if specified as postgresql://
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
-connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+if "sqlite" in DATABASE_URL:
+    connect_args = {"check_same_thread": False}
+else:
+    # 1 second connect_timeout for Postgres prevents hangs when local PG server is down
+    connect_args = {"connect_timeout": 1}
 
 try:
     engine = create_engine(DATABASE_URL, connect_args=connect_args)
-    # If using PostgreSQL, attempt a quick connection test
+    # If using PostgreSQL, perform a fast 1-second connection probe
     if not DATABASE_URL.startswith("sqlite"):
         with engine.connect() as conn:
             pass
