@@ -158,9 +158,9 @@ def analyze_ui_screenshot(
     except Exception as e:
         logger.warning(f"Could not load image dimensions from {image_path}: {e}")
 
-    # If no API key configured, return fallback intermediate representation
-    if not api_key:
-        logger.info("No GEMINI_API_KEY detected in environment; utilizing structured heuristic analysis fallback.")
+    # If no API key configured or in test mode, return fallback intermediate representation
+    if os.getenv("TESTING") == "1" or not api_key:
+        logger.info("TESTING mode or no GEMINI_API_KEY detected; utilizing structured heuristic analysis fallback.")
         ir = _generate_fallback_analysis(img_width, img_height, original_filename)
         duration_ms = int((time.time() - start_time) * 1000)
         return {

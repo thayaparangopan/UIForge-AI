@@ -267,22 +267,67 @@ Users can download the generated project as a ZIP file containing the required s
 uiforge-ai/
 │
 ├── frontend/
-│   └── React + TypeScript application
+│   ├── src/                    # React + TypeScript + Tailwind UI
+│   ├── Dockerfile              # Multi-stage production Nginx container
+│   └── nginx.conf              # SPA routing & API reverse proxy
 │
 ├── backend/
-│   └── FastAPI application
+│   ├── app/                    # FastAPI services, models, and endpoints
+│   └── Dockerfile              # Python 3.11-slim container with OpenCV
 │
 ├── docs/
-│   ├── architecture/
-│   ├── database/
-│   └── research/
+│   ├── architecture/           # Pipeline and system architecture
+│   ├── api/                    # OpenAPI endpoint specifications
+│   ├── database/               # Relational ER schema and constraints
+│   ├── deployment/             # Docker deployment guide
+│   └── research/               # Computer vision & multimodal analysis
 │
-├── tests/
-│
+├── tests/                      # Automated pytest integration test suite
+├── docker-compose.yml          # Postgres + Backend + Frontend stack
+├── start-dev.ps1               # 1-click Windows PowerShell dev launcher
+├── start-dev.bat               # 1-click Windows Batch dev launcher
+├── package.json                # Root orchestration scripts
 ├── .gitignore
-├── README.md
-└── LICENSE
+└── README.md
 ```
+
+---
+
+## 🚀 Getting Started
+
+### Option A: Local Development (Fastest for Development)
+
+1. **One-Click Launch:**
+   - **PowerShell**: `./start-dev.ps1`
+   - **Command Prompt**: `start-dev.bat`
+   - **NPM**: `npm run dev`
+
+2. **Access Services:**
+   - Frontend Studio: [http://localhost:5173](http://localhost:5173)
+   - Backend API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+### Option B: Docker Containerization (Production / Portable Stack)
+
+1. **Set your Gemini API Key:**
+   ```bash
+   # Windows PowerShell
+   $env:GEMINI_API_KEY="your_api_key_here"
+
+   # Linux / macOS
+   export GEMINI_API_KEY="your_api_key_here"
+   ```
+
+2. **Launch all services via Docker Compose:**
+   ```bash
+   docker compose up -d --build
+   ```
+
+3. **Access Services:**
+   - Frontend Studio: [http://localhost:3000](http://localhost:3000)
+   - Backend API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+   - PostgreSQL Database: `localhost:5432` (db: `uiforge_db`, user: `postgres`)
 
 ---
 
@@ -290,17 +335,17 @@ uiforge-ai/
 
 ### Phase 1 — Project Setup
 
-* [ ] Create GitHub repository
-* [ ] Configure React + TypeScript frontend
-* [ ] Configure FastAPI backend
-* [ ] Configure PostgreSQL
-* [ ] Establish frontend-backend communication
+* [x] Create GitHub repository
+* [x] Configure React + TypeScript frontend
+* [x] Configure FastAPI backend
+* [x] Configure PostgreSQL & SQLite auto-fallback
+* [x] Establish frontend-backend communication & Vite proxy
 
 ### Phase 2 — UI Design
 
-* [ ] Design UIForge AI screens in Figma
-* [ ] Create reusable frontend components
-* [ ] Implement the main application workflow
+* [x] Design UIForge AI screens in Figma
+* [x] Create reusable frontend components
+* [x] Implement the main 7-stage application workflow
 
 ### Phase 3 — Screenshot Processing
 
@@ -311,52 +356,58 @@ uiforge-ai/
 
 ### Phase 4 — AI UI Analysis
 
-* [ ] Integrate Gemini API
-* [ ] Send screenshot to Gemini
-* [ ] Extract UI components
-* [ ] Extract layout information
-* [ ] Extract colors, typography, and spacing
-* [ ] Generate structured UI representation
+* [x] Integrate Gemini API (Vision)
+* [x] Send screenshot to Gemini
+* [x] Extract UI components & bounding boxes
+* [x] Extract layout hierarchy
+* [x] Extract colors, typography, and spacing
+* [x] Generate structured UI Intermediate Representation (IR)
 
 ### Phase 5 — Code Generation
 
-* [ ] Create UI-to-code generation pipeline
-* [ ] Generate React.js + TypeScript code
-* [ ] Display generated code using Monaco Editor
-* [ ] Create live preview
+* [x] Create UI-to-code generation pipeline
+* [x] Generate React.js / React Native + TypeScript code
+* [x] Display generated code using interactive code viewer & tab selector
+* [x] Create live interactive preview canvas
 
 ### Phase 6 — Visual Comparison
 
-* [ ] Capture generated UI
-* [ ] Compare generated UI with original screenshot
-* [ ] Implement SSIM
-* [ ] Calculate similarity score
-* [ ] Identify visual differences
+* [x] Side-by-side comparison of original vs generated UI
+* [x] Implement OpenCV Gaussian filter SSIM
+* [x] Calculate overall fidelity similarity score
+* [x] Identify visual differences & generate Jet difference heatmap overlay
 
 ### Phase 7 — AI Refinement
 
-* [ ] Create refinement interface
-* [ ] Accept natural-language instructions
-* [ ] Send refinement request to Gemini
-* [ ] Update generated code
-* [ ] Re-render generated UI
-* [ ] Recalculate visual similarity
+* [x] Create refinement interface
+* [x] Accept natural-language instructions
+* [x] Send refinement request to Gemini
+* [x] Update generated code and sync AST
+* [x] Re-render generated UI
+* [x] Track visual similarity progression
 
 ### Phase 8 — Export
 
-* [ ] Generate project files
-* [ ] Create ZIP package
-* [ ] Provide download functionality
+* [x] Generate modular project file tree
+* [x] Create in-memory ZIP package
+* [x] Provide one-click download functionality
 
 ### Phase 9 — Testing & Evaluation
 
-* [ ] Test different UI screenshots
-* [ ] Test different layouts
-* [ ] Test code generation accuracy
-* [ ] Test visual similarity
-* [ ] Test refinement performance
-* [ ] Evaluate generated code quality
-* [ ] Document limitations
+* [x] Automated backend integration tests with pytest (13 tests passing)
+* [x] Test different UI screenshots (Mobile Login & SaaS Dashboard)
+* [x] Test code generation accuracy & zip archive validity
+* [x] Test visual similarity scoring & difference heatmap generation
+* [x] Frontend TypeScript compilation & build verification
+
+### Phase 10 — Containerization & Deployment
+
+* [x] Multi-stage React/Nginx frontend `Dockerfile`
+* [x] Python 3.11-slim FastAPI backend `Dockerfile` with OpenCV OS dependencies
+* [x] Unified multi-service `docker-compose.yml` (Postgres, Backend, Frontend)
+* [x] Reverse proxy configuration routing `/api/` and `/uploads/` seamlessly
+* [x] Persistent volume mounts for database data and generated upload assets
+* [x] Complete Docker deployment documentation (`docs/deployment/docker.md`)
 
 ---
 

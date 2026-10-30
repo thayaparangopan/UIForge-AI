@@ -1,0 +1,59 @@
+services:
+  # Relational Database for projects, screenshots, IR analysis, and generations
+  db:
+    image: postgres:16-alpine
+    container_name: uiforge-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: uiforge_password
+      POSTGRES_DB: uiforge_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d uiforge_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # FastAPI Backend Service (Multimodal Vision Analysis, Code Synth, OpenCV SSIM)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: uiforge-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:uiforge_password@db:5432/uiforge_db
+      DB_CONNECT_TIMEOUT: 5
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ENVIRONMENT: production
+      UPLOAD_DIR: uploads
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "8000:8000"
+
+  # React + Vite Frontend (Served via high-performance Nginx reverse proxy)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: uiforge-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:
+    name: uiforge_postgres_data
+  uploads_data:
+    name: uiforge_uploads_data
