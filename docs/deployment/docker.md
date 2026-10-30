@@ -95,3 +95,4 @@ docker compose up -d --build
 Two named Docker volumes persist all data across container restarts and updates:
 - **`uiforge_postgres_data`**: Stores PostgreSQL database tables, relational records, and execution states.
 - **`uiforge_uploads_data`**: Stores uploaded screenshot images, cropped bounding boxes, and OpenCV SSIM visual heatmaps.
+
