@@ -149,3 +149,4 @@ To evaluate the precision of the generated UI against the original source design
    $$\text{SSIM}(x, y) = \frac{(2\mu_x\mu_y + C_1)(2\sigma_{xy} + C_2)}{(\mu_x^2 + \mu_y^2 + C_1)(\sigma_x^2 + \sigma_y^2 + C_2)}$$
 3. **Jet Diff Heatmap**:
    `cv2.absdiff` computes pixel-level absolute difference. A `cv2.COLORMAP_JET` overlay is generated and blended at $40\%$ opacity over the original mockup to visually highlight layout, spacing, and color variances.
+

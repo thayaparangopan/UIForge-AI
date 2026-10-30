@@ -112,3 +112,4 @@ Stores AI vision analysis outputs and the complete JSON Intermediate Representat
 | `confidence_score` | `FLOAT` | `NOT NULL` | Model confidence ($0\text{--}100\%$) |
 | `processing_time_ms` | `INTEGER` | `NOT NULL` | Inference & parsing latency |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | `DEFAULT NOW()` | Analysis timestamp |
+

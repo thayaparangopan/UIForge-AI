@@ -45,3 +45,4 @@ To ensure synthesized code is responsive across viewports rather than locked to 
 $$\hat{x} = \frac{x}{\text{Width}_{\text{image}}} \times 100\%, \quad \hat{y} = \frac{y}{\text{Height}_{\text{image}}} \times 100\%$$
 
 This mathematical representation enables the code generation engine to translate visual regions into responsive CSS Grid and Flexbox layouts without hardcoded pixel coordinates.
+
