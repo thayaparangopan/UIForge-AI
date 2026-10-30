@@ -267,22 +267,67 @@ Users can download the generated project as a ZIP file containing the required s
 uiforge-ai/
 │
 ├── frontend/
-│   └── React + TypeScript application
+│   ├── src/                    # React + TypeScript + Tailwind UI
+│   ├── Dockerfile              # Multi-stage production Nginx container
+│   └── nginx.conf              # SPA routing & API reverse proxy
 │
 ├── backend/
-│   └── FastAPI application
+│   ├── app/                    # FastAPI services, models, and endpoints
+│   └── Dockerfile              # Python 3.11-slim container with OpenCV
 │
 ├── docs/
-│   ├── architecture/
-│   ├── database/
-│   └── research/
+│   ├── architecture/           # Pipeline and system architecture
+│   ├── api/                    # OpenAPI endpoint specifications
+│   ├── database/               # Relational ER schema and constraints
+│   ├── deployment/             # Docker deployment guide
+│   └── research/               # Computer vision & multimodal analysis
 │
-├── tests/
-│
+├── tests/                      # Automated pytest integration test suite
+├── docker-compose.yml          # Postgres + Backend + Frontend stack
+├── start-dev.ps1               # 1-click Windows PowerShell dev launcher
+├── start-dev.bat               # 1-click Windows Batch dev launcher
+├── package.json                # Root orchestration scripts
 ├── .gitignore
-├── README.md
-└── LICENSE
+└── README.md
 ```
+
+---
+
+## 🚀 Getting Started
+
+### Option A: Local Development (Fastest for Development)
+
+1. **One-Click Launch:**
+   - **PowerShell**: `./start-dev.ps1`
+   - **Command Prompt**: `start-dev.bat`
+   - **NPM**: `npm run dev`
+
+2. **Access Services:**
+   - Frontend Studio: [http://localhost:5173](http://localhost:5173)
+   - Backend API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+### Option B: Docker Containerization (Production / Portable Stack)
+
+1. **Set your Gemini API Key:**
+   ```bash
+   # Windows PowerShell
+   $env:GEMINI_API_KEY="your_api_key_here"
+
+   # Linux / macOS
+   export GEMINI_API_KEY="your_api_key_here"
+   ```
+
+2. **Launch all services via Docker Compose:**
+   ```bash
+   docker compose up -d --build
+   ```
+
+3. **Access Services:**
+   - Frontend Studio: [http://localhost:3000](http://localhost:3000)
+   - Backend API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+   - PostgreSQL Database: `localhost:5432` (db: `uiforge_db`, user: `postgres`)
 
 ---
 
@@ -354,6 +399,15 @@ uiforge-ai/
 * [x] Test code generation accuracy & zip archive validity
 * [x] Test visual similarity scoring & difference heatmap generation
 * [x] Frontend TypeScript compilation & build verification
+
+### Phase 10 — Containerization & Deployment
+
+* [x] Multi-stage React/Nginx frontend `Dockerfile`
+* [x] Python 3.11-slim FastAPI backend `Dockerfile` with OpenCV OS dependencies
+* [x] Unified multi-service `docker-compose.yml` (Postgres, Backend, Frontend)
+* [x] Reverse proxy configuration routing `/api/` and `/uploads/` seamlessly
+* [x] Persistent volume mounts for database data and generated upload assets
+* [x] Complete Docker deployment documentation (`docs/deployment/docker.md`)
 
 ---
 

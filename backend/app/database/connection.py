@@ -26,8 +26,9 @@ if DATABASE_URL.startswith("postgresql://"):
 if "sqlite" in DATABASE_URL:
     connect_args = {"check_same_thread": False}
 else:
-    # 1 second connect_timeout for Postgres prevents hangs when local PG server is down
-    connect_args = {"connect_timeout": 1}
+    # Configurable connect_timeout for Postgres (default 2s prevents local hangs, can be increased in Docker)
+    timeout_sec = int(os.getenv("DB_CONNECT_TIMEOUT", "2"))
+    connect_args = {"connect_timeout": timeout_sec}
 
 try:
     engine = create_engine(DATABASE_URL, connect_args=connect_args)
