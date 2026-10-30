@@ -47,3 +47,4 @@ def test_generate_endpoint_and_download(client):
     assert dl_res.status_code == 200
     assert dl_res.headers["content-type"] == "application/zip"
     assert len(dl_res.content) > 0
+

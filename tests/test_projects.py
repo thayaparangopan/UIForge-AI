@@ -57,3 +57,4 @@ def test_upload_invalid_mime_type(client):
     res = client.post(f"/api/projects/{proj_id}/upload", files=files)
     assert res.status_code == 400
     assert "invalid file type" in res.json()["detail"].lower()
+

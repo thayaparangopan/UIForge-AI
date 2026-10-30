@@ -33,3 +33,4 @@ finally {
     Remove-Job $backendJob -ErrorAction SilentlyContinue
     Write-Host "All processes cleanly stopped." -ForegroundColor Green
 }
+

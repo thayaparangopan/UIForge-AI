@@ -41,3 +41,4 @@ def test_analyze_endpoint(client):
     assert "intermediate_representation" in data
     assert data["component_count"] > 0
     assert data["confidence_score"] > 50
+

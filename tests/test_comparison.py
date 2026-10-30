@@ -41,3 +41,4 @@ def test_compare_endpoint(client):
     assert 0 <= data["metrics"]["ssimScore"] <= 100
     assert 0 <= data["metrics"]["overallSimilarity"] <= 100
     assert "disparities" in data
+
